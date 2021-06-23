@@ -1,3 +1,0 @@
-# PythonPC
-
-git checkout dev

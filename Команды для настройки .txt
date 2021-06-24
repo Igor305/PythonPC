@@ -13,4 +13,4 @@ serial = /proc/cpuinfo (Serial)
 
 
 
-pyuic5 -x PC.ui -o PC.py
+pyuic5 -x PC.ui -o interface.py

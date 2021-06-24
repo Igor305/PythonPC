@@ -59,11 +59,11 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
       <height>0</height>
      </rect>
     </property>
-    <property name="maximum">
-     <number>100</number>
+    <property name="styleSheet">
+     <string notr="true">background-color: rgb(0, 170, 0);</string>
     </property>
-    <property name="value">
-     <number>0</number>
+    <property name="textVisible">
+     <bool>false</bool>
     </property>
    </widget>
    <widget class="QLabel" name="deviceName">
@@ -435,15 +435,17 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
    <widget class="QLabel" name="name">
     <property name="geometry">
      <rect>
-      <x>80</x>
-      <y>420</y>
+      <x>100</x>
+      <y>260</y>
       <width>0</width>
       <height>0</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>15</pointsize>
+      <pointsize>30</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="styleSheet">
@@ -451,6 +453,12 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::AutoText</enum>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
     </property>
    </widget>
    <widget class="QLabel" name="price">
@@ -464,14 +472,20 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="font">
      <font>
-      <pointsize>15</pointsize>
+      <family>MS Shell Dlg 2</family>
+      <pointsize>140</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">color:rgb(240, 240, 0)</string>
+     <string notr="true">color: rgb(255, 238, 0);</string>
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
    <widget class="QLabel" name="pricePenny">
@@ -485,11 +499,13 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="font">
      <font>
-      <pointsize>15</pointsize>
+      <pointsize>65</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">color:rgb(240, 240, 0)</string>
+     <string notr="true">color: rgb(255, 238, 0);</string>
     </property>
     <property name="text">
      <string/>
@@ -506,11 +522,11 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="font">
      <font>
-      <pointsize>15</pointsize>
+      <pointsize>55</pointsize>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true">color:rgb(240, 240, 0)</string>
+     <string notr="true">color: rgb(255, 238, 0);</string>
     </property>
     <property name="text">
      <string/>
@@ -527,7 +543,9 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="font">
      <font>
-      <pointsize>15</pointsize>
+      <pointsize>95</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="styleSheet">
@@ -548,7 +566,9 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="font">
      <font>
-      <pointsize>15</pointsize>
+      <pointsize>40</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
      </font>
     </property>
     <property name="styleSheet">
@@ -569,7 +589,7 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="font">
      <font>
-      <pointsize>15</pointsize>
+      <pointsize>40</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -627,6 +647,94 @@ border-radius: 30px;
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="nameEmp">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>90</y>
+      <width>0</width>
+      <height>0</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>65</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 238, 0);</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="statusEmp">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>370</y>
+      <width>0</width>
+      <height>0</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>45</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(68, 160, 25);</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="timeEmp">
+    <property name="geometry">
+     <rect>
+      <x>190</x>
+      <y>440</y>
+      <width>0</width>
+      <height>0</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>25</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(255, 255, 255)</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="productImage">
+    <property name="geometry">
+     <rect>
+      <x>590</x>
+      <y>50</y>
+      <width>0</width>
+      <height>0</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-radius: 15px;</string>
+    </property>
+    <property name="text">
+     <string/>
     </property>
    </widget>
   </widget>

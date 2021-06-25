@@ -1,14 +1,13 @@
 sudo apt-get install python3-pyqt5
 
-
-
 deviceName = /etc/hostname
-ipAddress = 
 ipAddressStatic = /etc/dhcpcd.conf (#static ip_address)
 numberOS = /etc/os-release (VERSION_ID)
 temperatureCPU = /sys/class/thermal/thermal_zone0/temp
 serial = /proc/cpuinfo (Serial)
-влажность = 
+temperatureOut = 
+humidity = 
+numberBody = /etc/deviceCaseNum.conf
 
 
 

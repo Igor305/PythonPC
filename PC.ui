@@ -10,8 +10,15 @@
     <height>600</height>
    </rect>
   </property>
+  <property name="contextMenuPolicy">
+   <enum>Qt::NoContextMenu</enum>
+  </property>
   <property name="windowTitle">
    <string>PriceChecker</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>PythonPC/img/resources/Logo.svg</normaloff>PythonPC/img/resources/Logo.svg</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QLabel" name="image">
@@ -60,7 +67,7 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: rgb(0, 170, 0);</string>
+     <string notr="true">color: rgb(0, 170, 0);</string>
     </property>
     <property name="textVisible">
      <bool>false</bool>

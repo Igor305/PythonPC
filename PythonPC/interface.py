@@ -15,7 +15,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1024, 600)
-        MainWindow.setWindowFlags(QtCore.Qt.CustomizeWindowHint)
+        MainWindow.setWindowFlags(QtCore.Qt.CustomizeWindowHint)     
         MainWindow.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("PythonPC/img/resources/Logo.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -353,6 +353,10 @@ class Ui_MainWindow(object):
         self.configValue.setText("")
         self.configValue.setAlignment(QtCore.Qt.AlignCenter)
         self.configValue.setObjectName("configValue")
+        self.statusProgressBar = QtWidgets.QLabel(self.centralwidget)
+        self.statusProgressBar.setGeometry(QtCore.QRect(10, 570, 0, 0))
+        self.statusProgressBar.setText("")
+        self.statusProgressBar.setObjectName("statusProgressBar")
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)

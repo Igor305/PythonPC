@@ -25,32 +25,42 @@ class AdvertisingWorker(QThread):
 
     change_image = pyqtSignal()
 
-    def run(ui):
-       
+    def run(ui): 
         timing = time.time()
         while True:
               if time.time() - timing > 8.0:
                 timing = time.time()
-                ui.change_image = (QtGui.QPixmap("PythonPC/img/advertise/133.Episode.png"))
+                ui.change_image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/systemInfo_dark.jpg"))
                 print(ui.change_image)
 
 # QThead For ProgressBar
 
 class ProgressBarWorker(QThread):   
     
-    change_image = pyqtSignal()
     change_value = pyqtSignal(float)
 
-    def run(ui):
-        progress = 100
-        while progress != 0:
-            time.sleep(0.01)
-            progress -= 1
-            ui.change_value.emit(progress)
-            if (progress == 0):    
-                print(progress)
-                ui.change_image = QtGui.QPixmap("PythonPC/img/resources/systemInfo_dark.jpg")
+    def __init__(ui):
+        super(ProgressBarWorker,ui).__init__()
+        ui.progress = 100
+        ui.isStop = False
 
+    def run(ui):
+        while True:
+            time.sleep(0.08)
+            ui.progress -= 1
+            ui.change_value.emit(ui.progress)
+            
+            if (ui.isStop == True):
+                ui.isStop = False
+                ui.progress = 105
+                ui.run()
+            
+            if (ui.progress == 0):
+                ui.wait()
+
+    def stop(ui):
+        ui.isStop = True
+     
 # Get System Info
 
 def getInfo():
@@ -137,9 +147,14 @@ def changeConfig():
 # When barcode textChanged
 
 def sync_lineEdit():
-    barcode = ui.barcode.text() 
-    print(barcode)
 
+    barcode = ui.barcode.text() 
+
+    if(ui.progressBarThread.isRunning()):
+        ui.progressBarWorker.stop()    
+
+    ui.progressBarThread.start()    
+    
     ui.deviceName.setGeometry(QtCore.QRect(70, 50, 0, 0))
     ui.ipAddress.setGeometry(QtCore.QRect(70, 160, 0, 0))
     ui.ipAddressStatic.setGeometry(QtCore.QRect(70, 270, 0, 0))
@@ -153,7 +168,6 @@ def sync_lineEdit():
     ui.configTitle.setGeometry(QtCore.QRect(0, 60, 0, 0))
     ui.configText.setGeometry(QtCore.QRect(0, 250, 0, 0))
     ui.configValue.setGeometry(QtCore.QRect(0, 60, 0, 0))
-
 
     ui.barcodeText.setGeometry(QtCore.QRect(40, 550, 0, 0))
     ui.barcodeValue.setGeometry(QtCore.QRect(80, 550, 0, 0))
@@ -178,15 +192,11 @@ def sync_lineEdit():
     if (barcode != ""):    
         ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/manualInputBc_dark.png"))
         ui.barcode.setGeometry(QtCore.QRect(40, 245, 800, 70))
-        ui.progressBar.setGeometry(QtCore.QRect(1, 575, 1023, 20))
-
-    ui.progressBarThread.start() 
-    ui.progressBarThread.quit()      
+        ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1013, 20))
 
 # When Press Enter
 
 def barcodePressedEnter():
-
     barcode = ui.barcode.text() 
 
     # Mode Config
@@ -210,7 +220,6 @@ def barcodePressedEnter():
         ui.configTitle.setGeometry(QtCore.QRect(0, 60, 1024, 100))
         ui.configText.setGeometry(QtCore.QRect(0, 200, 1024, 100))
 
-
     elif (ui.statusConfig == 2):  
         ui.barcode.setText("")
         ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
@@ -231,8 +240,6 @@ def barcodePressedEnter():
         ui.configTitle.setGeometry(QtCore.QRect(0, 60, 1024, 100))
         ui.configText.setGeometry(QtCore.QRect(0, 200, 1024, 100))
 
-
-    
     elif (ui.statusConfig == 3):  
         ui.barcode.setText("")
         ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
@@ -260,7 +267,6 @@ def barcodePressedEnter():
 
         ui.configTitle.setGeometry(QtCore.QRect(0, 60, 1024, 100))
         ui.configText.setGeometry(QtCore.QRect(0, 200, 1024, 100))
-
 
     elif (ui.statusConfig == 5):
         ui.barcode.setText("")
@@ -299,7 +305,7 @@ def barcodePressedEnter():
         ui.configText.setGeometry(QtCore.QRect(0, 200, 1024, 100))
 
     elif (barcode == ""):
-        print("Ты чего")
+        print("")
 
     # Mode viewing info 
 
@@ -308,7 +314,6 @@ def barcodePressedEnter():
         ui.barcode.setText("")
         ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/systemInfo_dark.jpg"))
         ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
-        ui.progressBar.setGeometry(QtCore.QRect(10, 570, 1041, 23))
         ui.deviceName.setGeometry(QtCore.QRect(70, 50, 700, 30))
         ui.ipAddress.setGeometry(QtCore.QRect(70, 160, 700, 30))
         ui.ipAddressStatic.setGeometry(QtCore.QRect(70, 270, 700, 30))
@@ -572,16 +577,82 @@ def getProductInfo(art,barcode):
             ui.price.setGeometry(QtCore.QRect(250, 200, 0, 0))
 
             ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/merchandiserError.png"))
+
+def advertising ():
+    
+    if (ui.progressBar.value() < 1):
+
+        ui.barcode.setText("")
+        ui.barcode.setGeometry(QtCore.QRect(70, 50, 0, 0))
+        ui.progressBar.setGeometry(QtCore.QRect(70, 50, 0, 0))
+        ui.deviceName.setGeometry(QtCore.QRect(70, 50, 0, 0))
+        ui.ipAddress.setGeometry(QtCore.QRect(70, 160, 0, 0))
+        ui.ipAddressStatic.setGeometry(QtCore.QRect(70, 270, 0, 0))
+        ui.version.setGeometry(QtCore.QRect(70, 380, 0, 0))
+        ui.numberOS.setGeometry(QtCore.QRect(70, 490, 0, 0))
+        ui.temperatureCPU.setGeometry(QtCore.QRect(600, 50, 0, 0))
+        ui.serial.setGeometry(QtCore.QRect(600, 160, 0, 0))
+        ui.temperatureOut.setGeometry(QtCore.QRect(600, 270, 0, 0))
+        ui.humidity.setGeometry(QtCore.QRect(600, 380, 0, 0))
+        ui.numberBody.setGeometry(QtCore.QRect(600, 490, 0, 0))
+        ui.configTitle.setGeometry(QtCore.QRect(0, 60, 0, 0))
+        ui.configText.setGeometry(QtCore.QRect(0, 250, 0, 0))
+        ui.configValue.setGeometry(QtCore.QRect(0, 60, 0, 0))
+
+        ui.barcodeText.setGeometry(QtCore.QRect(40, 550, 0, 0))
+        ui.barcodeValue.setGeometry(QtCore.QRect(80, 550, 0, 0))
+        ui.amountText.setGeometry(QtCore.QRect(290, 550, 0, 0))
+        ui.amountValue.setGeometry(QtCore.QRect(380, 550, 0, 0))
+        ui.codeText.setGeometry(QtCore.QRect(420, 550, 0, 0))
+        ui.codeValue.setGeometry(QtCore.QRect(460, 550, 0, 0))
+        ui.name.setGeometry(QtCore.QRect(80, 320, 0, 0))
+        ui.price.setGeometry(QtCore.QRect(250, 200, 0, 0))
+        ui.nameCard.setGeometry(QtCore.QRect(120, 180, 0, 0))
+        ui.bonus.setGeometry(QtCore.QRect(0, 210, 0, 0))
+        ui.nameEmp.setGeometry(QtCore.QRect(0, 160, 0, 0))
+        ui.statusEmp.setGeometry(QtCore.QRect(0, 320, 0, 0))
+        ui.timeEmp.setGeometry(QtCore.QRect(0, 400, 0, 0))
+        ui.productImage.setGeometry(QtCore.QRect(530, 30, 0, 0))
+        ui.pricePenny.setGeometry(QtCore.QRect(380, 120, 0, 0))
+        ui.priceCurrency.setGeometry(QtCore.QRect(380, 190, 0, 0))
+        ui.priceOld.setGeometry(QtCore.QRect(180, 30, 0, 0))
+        ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 0, 0))
+        ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 0, 0))
         
+
+        for root, dirs, files in os.walk("PythonPC/img/advertise"): 
+            for filename in files:
+                print(ui.progressBar.value())   
+
+        if( ui.secondAdvertising == 8):
+            ui.secondAdvertising = 0
+            ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/advertise/" + files[ui.countAdvertising]))
+            ui.countAdvertising +=1
+
+        if (ui.countAdvertising > len(files)-1 ):
+            ui.countAdvertising = 0
+
+        ui.secondAdvertising += 1
+
+
+def timerAdvertising():
+
+    ui.timer = QtCore.QTimer()
+    ui.timer.timeout.connect(advertising)
+    ui.timer.start(1000)
+
+timerAdvertising()
+
 getInfo()
 MainWindow.showMaximized()
 #MainWindow.setWindowFlags(QtCore.Qt.CustomizeWindowHint)       
 ui.statusConfig = 0
+ui.countAdvertising = 0
+ui.secondAdvertising = 8
 ui.advertisingWorker = AdvertisingWorker()
 ui.advertisingThread = QThread()
 ui.advertisingWorker.moveToThread(ui.advertisingThread)
 ui.advertisingWorker.change_image.connect(ui.image.setPixmap)
-print(ui.image.setPixmap)
 ui.advertisingThread.started.connect(ui.advertisingWorker.run)
 #ui.advertisingThread.start()
 ui.barcode.textChanged.connect(sync_lineEdit)
@@ -590,9 +661,6 @@ ui.progressBarWorker = ProgressBarWorker()
 ui.progressBarThread = QThread()
 ui.progressBarWorker.moveToThread(ui.progressBarThread)       
 ui.progressBarWorker.change_value.connect(ui.progressBar.setValue)
-ui.progressBarWorker.change_image.connect(ui.image.pixmap)
-print(ui.progressBarWorker.change_image)
-print(ui.image.pixmap)
 ui.progressBarThread.started.connect(ui.progressBarWorker.run) 
 
 

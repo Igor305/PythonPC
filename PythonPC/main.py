@@ -2,6 +2,8 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from interface import Ui_MainWindow
 from PyQt5.QtCore import QEvent, QThread, pyqtSignal
 from datetime import datetime
+from ping3 import ping, verbose_ping
+
 import socket
 import requests 
 import sys
@@ -46,7 +48,7 @@ class ProgressBarWorker(QThread):
 
     def stop(ui):
         ui.isStop = True
-'''   
+   
 # Get System Info
 
 def getInfo():
@@ -54,10 +56,15 @@ def getInfo():
     deviceName = socket.gethostname()
     ui.deviceName.setText("Имя устройства: " + deviceName)
     
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(('8.8.8.8', 80))
-    ip = s.getsockname()[0]
-    ui.ipAddress.setText("Ip Address: " + str(ip))  
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 80))
+        ip = s.getsockname()[0]
+        ui.ipAddress.setText("Ip Address: " + str(ip)) 
+
+    except OSError:
+        ui.ipAddress.setText("Ip Address: ") 
+        ui.statusEthernet = False
 
     ipAddressStatic = open("/etc/dhcpcd.conf", "r")
     for s in ipAddressStatic:
@@ -85,10 +92,15 @@ def getInfo():
     ui.temperatureOut.setText("Температура внеш.: ")
     ui.humidity.setText("Влажность: ")
 
-    numberBody = open("/etc/deviceCaseNum.conf", "r")
-    ui.numberBody.setText("Номер корпуса: " + numberBody.read())
+    if (os.path.exists("/etc/deviceCaseNum.conf")):
+        numberBody = open("/etc/deviceCaseNum.conf", "r")
+        ui.apiDevice = numberBody.read()
+        ui.numberBody.setText("Номер корпуса: " + ui.apiDevice)
+    else:
+        numberBody = open("/etc/deviceCaseNum.conf", "w")
+        numberBody.write(ui.apiDevice)
+        numberBody.close()
     
-
 # Change File Config
 
 def changeConfig():
@@ -124,12 +136,12 @@ def changeConfig():
 
     Ip = open ("/etc/dhcpcd.conf", "w")
     Ip.write(ip)
-    
+
+    '''
     numberBody = open("/etc/deviceCaseNum.conf", "w")
     numberBody.write(ui.tempNumberBody)
     numberBody.close()
-    
-'''
+    '''
 # When barcode textChanged
 
 def sync_lineEdit():
@@ -140,43 +152,10 @@ def sync_lineEdit():
         ui.progressBarWorker.stop()    
 
     ui.progressBarThread.start()    
-    
-    ui.deviceName.setGeometry(QtCore.QRect(70, 50, 0, 0))
-    ui.ipAddress.setGeometry(QtCore.QRect(70, 160, 0, 0))
-    ui.ipAddressStatic.setGeometry(QtCore.QRect(70, 270, 0, 0))
-    ui.version.setGeometry(QtCore.QRect(70, 380, 0, 0))
-    ui.numberOS.setGeometry(QtCore.QRect(70, 490, 0, 0))
-    ui.temperatureCPU.setGeometry(QtCore.QRect(600, 50, 0, 0))
-    ui.serial.setGeometry(QtCore.QRect(600, 160, 0, 0))
-    ui.temperatureOut.setGeometry(QtCore.QRect(600, 270, 0, 0))
-    ui.humidity.setGeometry(QtCore.QRect(600, 380, 0, 0))
-    ui.numberBody.setGeometry(QtCore.QRect(600, 490, 0, 0))
-    ui.configTitle.setGeometry(QtCore.QRect(0, 60, 0, 0))
-    ui.configText.setGeometry(QtCore.QRect(0, 250, 0, 0))
-    ui.configValue.setGeometry(QtCore.QRect(0, 60, 0, 0))
-
-    ui.barcodeText.setGeometry(QtCore.QRect(40, 550, 0, 0))
-    ui.barcodeValue.setGeometry(QtCore.QRect(80, 550, 0, 0))
-    ui.amountText.setGeometry(QtCore.QRect(290, 550, 0, 0))
-    ui.amountValue.setGeometry(QtCore.QRect(380, 550, 0, 0))
-    ui.codeText.setGeometry(QtCore.QRect(420, 550, 0, 0))
-    ui.codeValue.setGeometry(QtCore.QRect(460, 550, 0, 0))
-    ui.name.setGeometry(QtCore.QRect(80, 320, 0, 0))
-    ui.price.setGeometry(QtCore.QRect(250, 200, 0, 0))
-    ui.nameCard.setGeometry(QtCore.QRect(120, 180, 0, 0))
-    ui.bonus.setGeometry(QtCore.QRect(0, 210, 0, 0))
-    ui.nameEmp.setGeometry(QtCore.QRect(0, 160, 0, 0))
-    ui.statusEmp.setGeometry(QtCore.QRect(0, 320, 0, 0))
-    ui.timeEmp.setGeometry(QtCore.QRect(0, 400, 0, 0))
-    ui.productImage.setGeometry(QtCore.QRect(530, 30, 0, 0))
-    ui.pricePenny.setGeometry(QtCore.QRect(380, 120, 0, 0))
-    ui.priceCurrency.setGeometry(QtCore.QRect(380, 190, 0, 0))
-    ui.priceOld.setGeometry(QtCore.QRect(180, 30, 0, 0))
-    ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 0, 0))
-    ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 0, 0))
+    hideForms()
 
     if (barcode != ""):    
-        ui.image.setPixmap(QtGui.QPixmap("./img/resources/manualInputBc_dark.png"))
+        ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/manualInputBc_dark.png"))
         ui.barcode.setGeometry(QtCore.QRect(40, 245, 800, 70))
         ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1013, 20))
 
@@ -190,7 +169,7 @@ def barcodePressedEnter():
     if (ui.statusConfig == 1):  
         ui.barcode.setText("")
         ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
-        ui.image.setPixmap(QtGui.QPixmap("./img/resources/systemInfo_dark.jpg"))
+        ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/systemInfo_dark.jpg"))
         ui.configTitle.setText("Настройки")
 
         if (int(barcode) < 0 or int(barcode) == 100 ):
@@ -209,7 +188,7 @@ def barcodePressedEnter():
     elif (ui.statusConfig == 2):  
         ui.barcode.setText("")
         ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
-        ui.image.setPixmap(QtGui.QPixmap("./img/resources/systemInfo_dark.jpg"))      
+        ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/systemInfo_dark.jpg"))      
 
         ui.configTitle.setText("Настройки")
 
@@ -229,7 +208,7 @@ def barcodePressedEnter():
     elif (ui.statusConfig == 3):  
         ui.barcode.setText("")
         ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
-        ui.image.setPixmap(QtGui.QPixmap("./img/resources/systemInfo_dark.jpg"))      
+        ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/systemInfo_dark.jpg"))      
         ui.statusConfig = 4
         ui.configTitle.setText("Настройки")
         ui.configText.setText("Отскануйте номер корпуса")
@@ -243,7 +222,7 @@ def barcodePressedEnter():
     elif (ui.statusConfig == 4):
         ui.barcode.setText("")
         ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
-        ui.image.setPixmap(QtGui.QPixmap("./img/resources/systemInfo_dark.jpg"))       
+        ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/systemInfo_dark.jpg"))       
         ui.statusConfig = 5
         ui.configTitle.setText("Настройки")
         ui.configText.setText("Збережіть зміни або відмініть")
@@ -257,7 +236,7 @@ def barcodePressedEnter():
     elif (ui.statusConfig == 5):
         ui.barcode.setText("")
         ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
-        ui.image.setPixmap(QtGui.QPixmap("./img/resources/systemInfo_dark.jpg"))       
+        ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/systemInfo_dark.jpg"))       
         ui.configTitle.setText("Настройки")
 
         if (barcode == "772211003"):
@@ -275,7 +254,7 @@ def barcodePressedEnter():
 
             ui.actualDeviceName = actualNumberShop + "-P" + ui.tempNumberPC
 
-            #changeConfig()
+            changeConfig()
 
             os.system("sudo reboot")
 
@@ -296,9 +275,11 @@ def barcodePressedEnter():
     # Mode viewing info 
 
     elif (barcode == "772211001"):
-        #getInfo()
+        getInfo()
         ui.barcode.setText("")
-        ui.image.setPixmap(QtGui.QPixmap("./img/resources/systemInfo_dark.jpg"))
+        ui.statusConfig = -1
+        ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/systemInfo_dark.jpg"))
+        ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1013, 20))
         ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
         ui.deviceName.setGeometry(QtCore.QRect(70, 50, 700, 30))
         ui.ipAddress.setGeometry(QtCore.QRect(70, 160, 700, 30))
@@ -317,7 +298,7 @@ def barcodePressedEnter():
         ui.statusConfig = 1
         ui.barcode.setText("")
         ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
-        ui.image.setPixmap(QtGui.QPixmap("./img/resources/systemInfo_dark.jpg"))
+        ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/systemInfo_dark.jpg"))
         
         ui.configTitle.setText("Настройки")
         ui.configText.setText("Отскануйте номер магазину")
@@ -330,18 +311,18 @@ def barcodePressedEnter():
     elif (barcode == "BarcodeReset"):
         ui.barcode.setText("")
         ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
-        ui.image.setPixmap(QtGui.QPixmap("./img/resources/systemInfo_dark.jpg"))
+        ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/systemInfo_dark.jpg"))
         print("Сброс")
 
     # Check Employment
 
-    elif (barcode.find("ent") == False):    
+    elif (barcode.find("ent") == False and ui.statusEthernet == True and ui.failConnenct == False):    
         try: 
             ui.barcode.setText("")
             ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
-            ui.image.setPixmap(QtGui.QPixmap("./img/resources/employeeInfo.png"))
+            ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/employeeInfo.png"))
 
-            emp = 'http://mpce03.avrora.lan/emp_info?key=39fa302c1a6b40e19020b376c9becb3b&stock=236&device=DeviceName&barcode='
+            emp = 'http://' + ui.apiAddress + '/emp_info?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&barcode='
             emp += barcode
 
             response = requests.get(emp).text
@@ -382,17 +363,32 @@ def barcodePressedEnter():
             ui.name.setGeometry(QtCore.QRect(80, 320, 0, 0))
             ui.price.setGeometry(QtCore.QRect(250, 200, 0, 0))
 
-            ui.image.setPixmap(QtGui.QPixmap("./img/resources/merchandiserError.png"))          
+            ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/merchandiserError.png"))          
 
     else:
 
         # Check Barcode
 
-        if (len(barcode) > 12):
+        if ui.statusEthernet == False or ui.failConnenct == True:
+
+            if ui.statusEthernet == False:
+
+                hideForms()
+                ui.barcode.setText("")
+                ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/error_server_dark.jpg"))
+
+            elif ui.failConnenct == True:
+
+                hideForms()
+                ui.barcode.setText("")
+                ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/Offline_dark_2.jpg"))
+
+        elif (len(barcode) > 12):
+
             ui.barcode.setText("")
             ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
-            ui.image.setPixmap(QtGui.QPixmap("./img/resources/productBack_dark.jpg"))
-            art = 'http://mpce03.avrora.lan/art?key=39fa302c1a6b40e19020b376c9becb3b&stock=235&device=DeviceName&barcode='
+            ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/productBack_dark.jpg"))
+            art = 'http://' + ui.apiAddress + '/art?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&barcode='
             art += barcode
             response = requests.get(art)
             getProductInfo(art,barcode)
@@ -400,10 +396,11 @@ def barcodePressedEnter():
         # Check Code
 
         elif(len(barcode) <= 12):
+
             ui.barcode.setText("")
             ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
-            ui.image.setPixmap(QtGui.QPixmap("./img/resources/productBack_dark.jpg"))
-            art = 'http://mpce04.avrora.lan/art?key=39fa302c1a6b40e19020b376c9becb3b&stock=235&device=DeviceName&code=' 
+            ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/productBack_dark.jpg"))
+            art = 'http://' + ui.apiAddress + '/art?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' 
             art += barcode +'&source=1'
             getProductInfo(art,barcode)
 
@@ -411,14 +408,19 @@ def barcodePressedEnter():
 
 def getProductInfo(art,barcode):
     try:
+
         response = requests.get(art).text
         print (response)
         responseMini1 = response.replace('{"Barcode":' ,'')
+
         if (responseMini1[0] == '"'):
+
             responseMini1NotNull = responseMini1[1:]
             barcodeStr = responseMini1NotNull[0:responseMini1NotNull.index('",')]
             responseMini2 = responseMini1NotNull.replace(barcodeStr + '","Id":','')
+
         elif (responseMini1[0] != '"'):
+
             barcodeStr = responseMini1[0:responseMini1.index(',')]
             responseMini2 = responseMini1.replace(barcodeStr + ',"Id":','')
         idStr = responseMini2[0:responseMini2.index(',')]
@@ -467,17 +469,16 @@ def getProductInfo(art,barcode):
                 ui.priceOld.setGeometry(QtCore.QRect(350, 30, 100, 100))
                 ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 200, 50))
                 ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 200, 150))
-                print(1)
+
             elif (priceOldFloat < 100):
                 ui.priceOld.setGeometry(QtCore.QRect(270, 30, 250, 100))
                 ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 200, 50))
                 ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 200, 150))
-                print(10)
+
             elif (priceOldFloat >= 100):
                 ui.priceOld.setGeometry(QtCore.QRect(180, 30, 250, 100))
                 ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 200, 50))
                 ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 200, 150))
-                print(100)
 
         ui.barcodeText.setGeometry(QtCore.QRect(40, 550, 80, 20))
         ui.barcodeValue.setGeometry(QtCore.QRect(80, 550, 200, 20))
@@ -493,10 +494,12 @@ def getProductInfo(art,barcode):
             ui.pricePenny.setGeometry(QtCore.QRect(300, 120, 200, 200))
             ui.priceCurrency.setGeometry(QtCore.QRect(300, 190, 200, 200))
         elif (priceFloat < 100):
+
             ui.price.setGeometry(QtCore.QRect(0, 100, 450, 300))
             ui.pricePenny.setGeometry(QtCore.QRect(350, 120, 200, 200))
             ui.priceCurrency.setGeometry(QtCore.QRect(350, 190, 200, 200))  
-        elif (priceFloat >= 100):      
+        elif (priceFloat >= 100):   
+
             ui.price.setGeometry(QtCore.QRect(0, 100, 400, 300))
             ui.pricePenny.setGeometry(QtCore.QRect(380, 120, 200, 200))
             ui.priceCurrency.setGeometry(QtCore.QRect(380, 190, 200, 200))
@@ -504,22 +507,22 @@ def getProductInfo(art,barcode):
         # Get image product
 
         try:
-            image  = 'http://mpce04.avrora.lan/img?key=39fa302c1a6b40e19020b376c9becb3b&stock=235&device=DeviceName&code='
+            image  = 'http://' + ui.apiAddress + '/img?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code='
             image += idStr + '&sticker=1'
             
             responseImage = requests.get(image)
             
             print(responseImage.url)
-            file = open("./img/temp/temp_image.jpg", "wb")
+            file = open("PythonPC/img/temp/temp_image.jpg", "wb")
             file.write(responseImage.content)
             file.close()
 
-            ui.productImage.setStyleSheet("border-radius:15px; border-image: url(./img/temp/temp_image.jpg) 0 0 0 0 stretch stretch;")
+            ui.productImage.setStyleSheet("border-radius:15px; border-image: url(PythonPC/img/temp/temp_image.jpg) 0 0 0 0 stretch stretch;")
             
             ui.productImage.setGeometry(QtCore.QRect(530, 25, 470, 545))
                 
         except Exception:
-            ui.productImage.setPixmap(QtGui.QPixmap("./img/resources/noImage.jpg"))         
+            ui.productImage.setPixmap(QtGui.QPixmap("PythonPC/img/resources/noImage.jpg"))         
     
          
     except Exception:
@@ -527,7 +530,7 @@ def getProductInfo(art,barcode):
         # Check Card
 
         try:
-            card = 'http://mpce04.avrora.lan/card?key=39fa302c1a6b40e19020b376c9becb3b&stock=235&device=DeviceName&card='
+            card = 'http://' + ui.apiAddress + '/card?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&card='
             card += barcode + '&source=1'
             responseCard = requests.get(card).text
             print(responseCard)
@@ -549,7 +552,7 @@ def getProductInfo(art,barcode):
             ui.nameCard.setGeometry(QtCore.QRect(120, 180, 800, 60))
             ui.bonus.setGeometry(QtCore.QRect(0, 210, 1024, 400))
 
-            ui.image.setPixmap(QtGui.QPixmap("./img/resources/dCardBack_dark.jpg"))          
+            ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/dCardBack_dark.jpg"))          
             
         except Exception:
 
@@ -562,59 +565,81 @@ def getProductInfo(art,barcode):
             ui.name.setGeometry(QtCore.QRect(80, 320, 0, 0))
             ui.price.setGeometry(QtCore.QRect(250, 200, 0, 0))
 
-            ui.image.setPixmap(QtGui.QPixmap("./img/resources/merchandiserError.png"))
+            ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/merchandiserError.png"))
+
+def checkPing():
+
+    # Confirm API server
+    mpce03 = "mpce03.avrora.lan"
+    mpce04 = "mpce04.avrora.lan"
+    
+    pingMpce03 = ping(mpce03)
+    pingMpce04 = ping(mpce04)
+
+    ui.failConnenct = False
+
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 80))
+        ui.statusEthernet = True
+
+    except OSError:
+        ui.statusEthernet = False
+        barcode = ui.barcode.text() 
+
+        if (ui.progressBar.value() < 1):
+            ui.barcode.setText("") 
+            ui.statusConfig = 0
+
+        if (ui.statusConfig == 0 and len(barcode) < 1):
+
+            hideForms()
+
+            ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/error_server_dark.jpg"))
+
+    if ui.statusEthernet == True:
+
+        barcode = ui.barcode.text() 
+
+        if pingMpce03 == None and pingMpce04 == None or pingMpce03 == False and pingMpce04 == False:
+            ui.failConnenct = True 
+        
+        elif pingMpce04 == False or None:
+            ui.apiAddress = mpce03
+        
+        elif pingMpce03 == False or None:
+            ui.apiAddress = mpce04
+
+        elif pingMpce03 < pingMpce04:
+            ui.apiAddress = mpce03
+
+        elif pingMpce04 < pingMpce03:     
+            ui.apiAddress = mpce04
+
+        if (ui.progressBar.value() < 1):
+            ui.barcode.setText("") 
+            ui.statusConfig = 0
+
+        if (ui.failConnenct == True and ui.statusConfig == 0 and len(barcode) < 1):
+
+            hideForms()
+
+            ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/Offline_dark_2.jpg"))
 
 def advertising ():
     
-    if (ui.progressBar.value() < 1):
-
+    if (ui.progressBar.value() < 1 and ui.failConnenct == False and ui.statusEthernet == True):
         ui.barcode.setText("")
-        ui.barcode.setGeometry(QtCore.QRect(70, 50, 0, 0))
-        ui.progressBar.setGeometry(QtCore.QRect(70, 50, 0, 0))
-        ui.deviceName.setGeometry(QtCore.QRect(70, 50, 0, 0))
-        ui.ipAddress.setGeometry(QtCore.QRect(70, 160, 0, 0))
-        ui.ipAddressStatic.setGeometry(QtCore.QRect(70, 270, 0, 0))
-        ui.version.setGeometry(QtCore.QRect(70, 380, 0, 0))
-        ui.numberOS.setGeometry(QtCore.QRect(70, 490, 0, 0))
-        ui.temperatureCPU.setGeometry(QtCore.QRect(600, 50, 0, 0))
-        ui.serial.setGeometry(QtCore.QRect(600, 160, 0, 0))
-        ui.temperatureOut.setGeometry(QtCore.QRect(600, 270, 0, 0))
-        ui.humidity.setGeometry(QtCore.QRect(600, 380, 0, 0))
-        ui.numberBody.setGeometry(QtCore.QRect(600, 490, 0, 0))
-        ui.configTitle.setGeometry(QtCore.QRect(0, 60, 0, 0))
-        ui.configText.setGeometry(QtCore.QRect(0, 250, 0, 0))
-        ui.configValue.setGeometry(QtCore.QRect(0, 60, 0, 0))
 
-        ui.barcodeText.setGeometry(QtCore.QRect(40, 550, 0, 0))
-        ui.barcodeValue.setGeometry(QtCore.QRect(80, 550, 0, 0))
-        ui.amountText.setGeometry(QtCore.QRect(290, 550, 0, 0))
-        ui.amountValue.setGeometry(QtCore.QRect(380, 550, 0, 0))
-        ui.codeText.setGeometry(QtCore.QRect(420, 550, 0, 0))
-        ui.codeValue.setGeometry(QtCore.QRect(460, 550, 0, 0))
-        ui.name.setGeometry(QtCore.QRect(80, 320, 0, 0))
-        ui.price.setGeometry(QtCore.QRect(250, 200, 0, 0))
-        ui.nameCard.setGeometry(QtCore.QRect(120, 180, 0, 0))
-        ui.bonus.setGeometry(QtCore.QRect(0, 210, 0, 0))
-        ui.nameEmp.setGeometry(QtCore.QRect(0, 160, 0, 0))
-        ui.statusEmp.setGeometry(QtCore.QRect(0, 320, 0, 0))
-        ui.timeEmp.setGeometry(QtCore.QRect(0, 400, 0, 0))
-        ui.productImage.setGeometry(QtCore.QRect(530, 30, 0, 0))
-        ui.pricePenny.setGeometry(QtCore.QRect(380, 120, 0, 0))
-        ui.priceCurrency.setGeometry(QtCore.QRect(380, 190, 0, 0))
-        ui.priceOld.setGeometry(QtCore.QRect(180, 30, 0, 0))
-        ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 0, 0))
-        ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 0, 0))
-        
-#PythonPC/
-        for root, dirs, files in os.walk("./img/advertise"): 
-            for filename in files:
-                print(ui.progressBar.value())   
-                
-        ui.image.setPixmap(QtGui.QPixmap("./img/advertise/" + files[ui.countAdvertising]))
+        hideForms() 
+
+        for root, dirs, files in os.walk("PythonPC/img/advertise"): 
+            for filename in files:                          
+                ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/advertise/" + files[ui.countAdvertising]))
         
         if( ui.secondAdvertising == 8):
             ui.secondAdvertising = 0
-            ui.image.setPixmap(QtGui.QPixmap("./img/advertise/" + files[ui.countAdvertising]))
+            ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/advertise/" + files[ui.countAdvertising]))
             ui.countAdvertising +=1
 
         if (ui.countAdvertising > len(files)-1 ):
@@ -622,21 +647,70 @@ def advertising ():
 
         ui.secondAdvertising += 1
 
+def hideForms():
+
+    ui.barcode.setGeometry(QtCore.QRect(70, 50, 0, 0))
+    ui.progressBar.setGeometry(QtCore.QRect(70, 50, 0, 0))
+    ui.deviceName.setGeometry(QtCore.QRect(70, 50, 0, 0))
+    ui.ipAddress.setGeometry(QtCore.QRect(70, 160, 0, 0))
+    ui.ipAddressStatic.setGeometry(QtCore.QRect(70, 270, 0, 0))
+    ui.version.setGeometry(QtCore.QRect(70, 380, 0, 0))
+    ui.numberOS.setGeometry(QtCore.QRect(70, 490, 0, 0))
+    ui.temperatureCPU.setGeometry(QtCore.QRect(600, 50, 0, 0))
+    ui.serial.setGeometry(QtCore.QRect(600, 160, 0, 0))
+    ui.temperatureOut.setGeometry(QtCore.QRect(600, 270, 0, 0))
+    ui.humidity.setGeometry(QtCore.QRect(600, 380, 0, 0))
+    ui.numberBody.setGeometry(QtCore.QRect(600, 490, 0, 0))
+    ui.configTitle.setGeometry(QtCore.QRect(0, 60, 0, 0))
+    ui.configText.setGeometry(QtCore.QRect(0, 250, 0, 0))
+    ui.configValue.setGeometry(QtCore.QRect(0, 60, 0, 0))
+
+    ui.barcodeText.setGeometry(QtCore.QRect(40, 550, 0, 0))
+    ui.barcodeValue.setGeometry(QtCore.QRect(80, 550, 0, 0))
+    ui.amountText.setGeometry(QtCore.QRect(290, 550, 0, 0))
+    ui.amountValue.setGeometry(QtCore.QRect(380, 550, 0, 0))
+    ui.codeText.setGeometry(QtCore.QRect(420, 550, 0, 0))
+    ui.codeValue.setGeometry(QtCore.QRect(460, 550, 0, 0))
+    ui.name.setGeometry(QtCore.QRect(80, 320, 0, 0))
+    ui.price.setGeometry(QtCore.QRect(250, 200, 0, 0))
+    ui.nameCard.setGeometry(QtCore.QRect(120, 180, 0, 0))
+    ui.bonus.setGeometry(QtCore.QRect(0, 210, 0, 0))
+    ui.nameEmp.setGeometry(QtCore.QRect(0, 160, 0, 0))
+    ui.statusEmp.setGeometry(QtCore.QRect(0, 320, 0, 0))
+    ui.timeEmp.setGeometry(QtCore.QRect(0, 400, 0, 0))
+    ui.productImage.setGeometry(QtCore.QRect(530, 30, 0, 0))
+    ui.pricePenny.setGeometry(QtCore.QRect(380, 120, 0, 0))
+    ui.priceCurrency.setGeometry(QtCore.QRect(380, 190, 0, 0))
+    ui.priceOld.setGeometry(QtCore.QRect(180, 30, 0, 0))
+    ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 0, 0))
+    ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 0, 0))
+
+def timerCheckPing():
+
+    checkPing()
+    ui.timerCheckPing = QtCore.QTimer()
+    ui.timerCheckPing.timeout.connect(checkPing)
+    ui.timerCheckPing.start(1000)
 
 def timerAdvertising():
 
-    ui.timer = QtCore.QTimer()
-    ui.timer.timeout.connect(advertising)
-    ui.timer.start(1000)
+    ui.timerAdvertising = QtCore.QTimer()
+    ui.timerAdvertising.timeout.connect(advertising)
+    ui.timerAdvertising.start(1000)
 
-timerAdvertising()
-
-#getInfo()
-MainWindow.showMaximized()
-#MainWindow.setWindowFlags(QtCore.Qt.CustomizeWindowHint)       
+ui.statusEthernet = True
 ui.statusConfig = 0
 ui.countAdvertising = 0
 ui.secondAdvertising = 8
+ui.apiKey="39fa302c1a6b40e19020b376c9becb3b"
+ui.apiStock="235"
+ui.apiDevice="0000"
+
+timerCheckPing()
+timerAdvertising()
+getInfo()
+MainWindow.showMaximized()
+#MainWindow.setWindowFlags(QtCore.Qt.CustomizeWindowHint)       
 ui.barcode.textChanged.connect(sync_lineEdit)
 ui.barcode.returnPressed.connect(barcodePressedEnter)
 ui.progressBarWorker = ProgressBarWorker()

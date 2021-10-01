@@ -91,13 +91,14 @@ def getInfo():
 
     ui.temperatureOut.setText("Температура внеш.: ")
     ui.humidity.setText("Влажность: ")
-
-    if (os.path.exists("/etc/deviceCaseNum.conf")):
-        numberBody = open("/etc/deviceCaseNum.conf", "r")
+    
+    if (os.path.exists("deviceCaseNum.conf")):
+        numberBody = open("deviceCaseNum.conf", "r")
         ui.apiDevice = numberBody.read()
         ui.numberBody.setText("Номер корпуса: " + ui.apiDevice)
+        numberBody.close()
     else:
-        numberBody = open("/etc/deviceCaseNum.conf", "w")
+        numberBody = open("deviceCaseNum.conf", "w")
         numberBody.write(ui.apiDevice)
         numberBody.close()
     
@@ -107,58 +108,90 @@ def changeConfig():
     
     os.system("sudo hostnamectl set-hostname " + ui.actualDeviceName)
 
-    Ip = open ("/etc/dhcpcd.conf", "r")
-
     newIp = open ("Ip.conf", "w")
 
-    ip =""
     minitempIp = ui.tempIp[0 : ui.tempIp.rfind('.')] 
 
-    lines = Ip.readlines()
-   
-    for line in lines:     
+    ip = "hostname\n" + " clientid\n" + " persistent\n" + " option rapid_commit\n" + " option domain_name_servers, domain_name, domain_search, host_name\n" + " option classless_static_routes\n" + " option ntp_servers\n" + " option interface_mtu\n" + " require dhcp_server_identifier\n" + "  slaac private\n" + " nohook lookup-hostname\n" + " profile static_eth0\n" + " static ip_address=" + ui.tempIp +"/24\n" + " static routers=" + minitempIp + "\n" + "static domain_name_servers=172.17.64.24 172.17.64.24\n" + " interface eth0\n" + " fallback static_eth0hostname\n"
 
-            if not line:
-                break
-
-            elif(line.find(" static ip_address") == 0):            
-                ip += " static ip_address=" + ui.tempIp + "/24\n"
-
-            elif(line.find(" static routers") == 0):
-                ip += " static routers=" + minitempIp + ".1\n"
-
-            else:
-                ip += line
-
-    Ip.close()
     newIp.write(ip)
     newIp.close()
 
     Ip = open ("/etc/dhcpcd.conf", "w")
     Ip.write(ip)
+    Ip.close()
+
+    nBody = open ("deviceCaseNum.conf", "w")
+    nBody.write(ui.tempNumberBody)
+    nBody.close()
 
     '''
-    numberBody = open("/etc/deviceCaseNum.conf", "w")
+    numberBody = open("/etc/deviceCaseNumber.conf", "w")
     numberBody.write(ui.tempNumberBody)
     numberBody.close()
     '''
+
+# BarcodeReset
+
+def barcodeReset ():
+
+    ui.actualDeviceName = "Avrora"
+    os.system("sudo hostnamectl set-hostname " + ui.actualDeviceName)
+
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 80))
+        ip = s.getsockname()[0]
+
+    except OSError:
+        ui.ipAddress.setText("Ip Address: ") 
+        ui.statusEthernet = False
+
+    ui.tempIp = ip
+
+    newIp = open ("Ip.conf", "w")
+
+    minitempIp = ui.tempIp[0 : ui.tempIp.rfind('.')] 
+
+    ip = "hostname\n" + " clientid\n" + " persistent\n" + " option rapid_commit\n" + " option domain_name_servers, domain_name, domain_search, host_name\n" + " option classless_static_routes\n" + " option ntp_servers\n" + " option interface_mtu\n" + " require dhcp_server_identifier\n" + "  slaac private\n" + " nohook lookup-hostname\n" + " profile static_eth0\n" + " static ip_address=" + ui.tempIp +"/24\n" + " static routers=" + minitempIp + "\n" + "static domain_name_servers=172.17.64.24 172.17.64.24\n" + " interface eth0\n" + " fallback static_eth0hostname\n"
+
+    newIp.write(ip)
+    newIp.close()
+
+    Ip = open ("/etc/dhcpcd.conf", "w")
+    Ip.write(ip)
+    Ip.close()
+
+    ui.tempNumberBody = "0000"
+
+    nBody = open ("deviceCaseNum.conf", "w")
+    nBody.write(ui.tempNumberBody)
+    nBody.close()
+    
 # When barcode textChanged
 
 def sync_lineEdit():
 
+    ui.progressBarThread.start()  
+
     barcode = ui.barcode.text() 
 
     if(ui.progressBarThread.isRunning()):
-        ui.progressBarWorker.stop()    
+        ui.progressBarWorker.stop()  
+    
+    hideForms()  
 
-    ui.progressBarThread.start()    
-    hideForms()
+    if (barcode == ""):   
 
-    if (barcode != ""):    
+        ui.progressBarWorker.stop() 
+        ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1013, 20))
+        
+    if (barcode != ""):  
+   
         ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/manualInputBc_dark.png"))
         ui.barcode.setGeometry(QtCore.QRect(40, 245, 800, 70))
         ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1013, 20))
-
+        
 # When Press Enter
 
 def barcodePressedEnter():
@@ -312,7 +345,10 @@ def barcodePressedEnter():
         ui.barcode.setText("")
         ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
         ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/systemInfo_dark.jpg"))
-        print("Сброс")
+
+        barcodeReset()
+
+        os.system("sudo reboot")
 
     # Check Employment
 
@@ -604,10 +640,10 @@ def checkPing():
         if pingMpce03 == None and pingMpce04 == None or pingMpce03 == False and pingMpce04 == False:
             ui.failConnenct = True 
         
-        elif pingMpce04 == False or None:
+        elif pingMpce04 == False or pingMpce04 == None:
             ui.apiAddress = mpce03
         
-        elif pingMpce03 == False or None:
+        elif pingMpce03 == False or pingMpce03 ==  None:
             ui.apiAddress = mpce04
 
         elif pingMpce03 < pingMpce04:
@@ -690,7 +726,7 @@ def timerCheckPing():
     checkPing()
     ui.timerCheckPing = QtCore.QTimer()
     ui.timerCheckPing.timeout.connect(checkPing)
-    ui.timerCheckPing.start(1000)
+    ui.timerCheckPing.start(10000)
 
 def timerAdvertising():
 

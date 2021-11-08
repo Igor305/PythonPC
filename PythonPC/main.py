@@ -1,14 +1,21 @@
+from genericpath import exists
 from PyQt5 import QtCore, QtGui, QtWidgets
+from adafruit_platformdetect import board
 from interface import Ui_MainWindow
-from PyQt5.QtCore import QEvent, QThread, pyqtSignal
-from datetime import date, datetime
-from ping3 import ping, verbose_ping
+from PyQt5.QtCore import QThread, pyqtSignal
+from datetime import datetime
+from ping3 import ping
 
 import socket
 import requests 
 import sys
 import time
 import os
+
+import loging
+import adafruit_dht
+from board import *
+
 
 # Create application
 app = QtWidgets.QApplication(sys.argv)
@@ -49,30 +56,25 @@ class ProgressBarWorker(QThread):
     def stop(ui):
         ui.isStop = True
 
-# Create Log
-
-def createLog():
-
-    if not os.path.exists("logs"):
-        os.mkdir("logs")
-
-def writeResponseToLog(url):
-
-    now = datetime.now()
-    date_now = now.strftime("%m.%d.%Y")
-    date_time_now = now.strftime("%m.%d.%Y %H:%M:%S.%f")
-    log = open("logs/ %s.txt" % date_now, "a")
-    separator = "---------------------------------------------------------------------------" 
-    log.write("|" + date_time_now + "|" + url + "\n|")
-    log.write(separator + separator + separator + "\n")
-    log.close()
-'''
 # Get System Info
 
 def getInfo():
     
     deviceName = socket.gethostname()
     ui.deviceName.setText("Имя устройства: " + deviceName)
+
+    if (deviceName != "Avrora"):   
+        name = deviceName.split('-P')    
+        stock = name[0]
+        device = name[1]
+
+        stock = stock[1:len(stock)]
+
+        while(stock.find('0') == 0):
+            stock = stock[1:len(stock)]
+
+        ui.apiStock = stock
+        ui.apiDevice = device
     
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -107,17 +109,26 @@ def getInfo():
         if "Serial" in s:
             ui.serial.setText("Serial: " + s[10:])
 
-    ui.temperatureOut.setText("Температура внеш.: ")
-    ui.humidity.setText("Влажность: ")
+    try:
+        SENSOR_PIN = D22
+        dht22 = adafruit_dht.DHT22(SENSOR_PIN, use_pulseio=False)
+        temperature = dht22.temperature
+        humidity = dht22.humidity
+    except:
+        temperature = 0
+        humidity = 0
+
+    ui.temperatureOut.setText(f"Температура внеш.: {temperature:.2f}°C")
+    ui.humidity.setText(f"Влажность: {humidity:.2f}") 
     
-    if (os.path.exists("deviceCaseNum.conf")):
-        numberBody = open("deviceCaseNum.conf", "r")
-        ui.apiDevice = numberBody.read()
-        ui.numberBody.setText("Номер корпуса: " + ui.apiDevice)
+    if (os.path.exists("PythonPC/deviceCaseNum.conf")):
+        numberBody = open("PythonPC/deviceCaseNum.conf", "r")
+        ui.apiNumberBody = numberBody.read()
+        ui.numberBody.setText("Номер корпуса: " + ui.apiNumberBody)
         numberBody.close()
     else:
-        numberBody = open("deviceCaseNum.conf", "w")
-        numberBody.write(ui.apiDevice)
+        numberBody = open("PythonPC/deviceCaseNum.conf", "w")
+        numberBody.write(ui.apiNumberBody)
         numberBody.close()
     
 # Change File Config
@@ -126,7 +137,7 @@ def changeConfig():
     
     os.system("sudo hostnamectl set-hostname " + ui.actualDeviceName)
 
-    newIp = open ("Ip.conf", "w")
+    newIp = open ("PythonPC/Ip.conf", "w")
 
     minitempIp = ui.tempIp[0 : ui.tempIp.rfind('.')] 
 
@@ -139,13 +150,13 @@ def changeConfig():
     Ip.write(ip)
     Ip.close()
 
-    nBody = open ("deviceCaseNum.conf", "w")
+    nBody = open ("PythonPC/deviceCaseNum.conf", "w")
     nBody.write(ui.tempNumberBody)
     nBody.close()
     
 # BarcodeReset
 
-def barcodeReset ():
+def barcodeReset():
 
     ui.actualDeviceName = "Avrora"
     os.system("sudo hostnamectl set-hostname " + ui.actualDeviceName)
@@ -161,7 +172,7 @@ def barcodeReset ():
 
     ui.tempIp = ip
 
-    newIp = open ("Ip.conf", "w")
+    newIp = open ("PythonPC/Ip.conf", "w")
 
     minitempIp = ui.tempIp[0 : ui.tempIp.rfind('.')] 
 
@@ -176,10 +187,10 @@ def barcodeReset ():
 
     ui.tempNumberBody = "0000"
 
-    nBody = open ("deviceCaseNum.conf", "w")
+    nBody = open ("PythonPC/deviceCaseNum.conf", "w")
     nBody.write(ui.tempNumberBody)
     nBody.close()
-'''
+
 
 # When barcode textChanged
 
@@ -300,8 +311,8 @@ def barcodePressedEnter():
 
             ui.actualDeviceName = actualNumberShop + "-P" + ui.tempNumberPC
 
-            #changeConfig()
-            writeResponseToLog("ChangeConfig | Номер магазину:"+ ui.tempNumberShop + " | Номер прайсчекера:" + ui.tempNumberPC + " | IP-адрес:" + ui.tempIp + " | Номер корпуса:" + ui.tempNumberBody)
+            changeConfig()
+            loging.writeInfo("ChangeConfig | Store number:"+ ui.tempNumberShop + " | Price checker number:" + ui.tempNumberPC + " | IP address:" + ui.tempIp + " | Body number:" + ui.tempNumberBody)
             os.system("sudo reboot")
 
         elif (barcode == "772211004"):
@@ -321,7 +332,7 @@ def barcodePressedEnter():
     # Mode viewing info 
 
     elif (barcode == "772211001"):
-        #getInfo()
+        getInfo()
         ui.barcode.setText("")
         ui.statusConfig = -1
         ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/systemInfo_dark.jpg"))
@@ -359,8 +370,8 @@ def barcodePressedEnter():
         ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
         ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/systemInfo_dark.jpg"))
 
-        #barcodeReset()
-        writeResponseToLog("BarcodeReset")
+        barcodeReset()
+        loging.writeInfo("BarcodeReset | Store number:235 | Price checker number:DeviceNumber | Body number:0000")      
         os.system("sudo reboot")
 
     # Check Employment
@@ -375,7 +386,7 @@ def barcodePressedEnter():
             emp += barcode
 
             response = requests.get(emp)
-            writeResponseToLog(response.url)
+            loging.writeResponseToLog(response.url,response.elapsed.total_seconds())
             
             responseMini1 = response.replace('{"Id":', '')
             idStr = responseMini1[0:responseMini1.index(',')]
@@ -458,6 +469,8 @@ def barcodePressedEnter():
 def getProductInfo(art,barcode):
     try:
         response = requests.get(art)
+
+        loging.writeResponseToLog(response.url,response.elapsed.total_seconds())
 
         responseMini1 = response.text.replace('{"Barcode":' ,'')
 
@@ -560,8 +573,8 @@ def getProductInfo(art,barcode):
             image += idStr + '&sticker=1'
             
             responseImage = requests.get(image)           
-            response.url += " | "+ responseImage.url
-            writeResponseToLog(response.url)
+
+            loging.writeResponseToLog(responseImage.url,response.elapsed.total_seconds())
 
             file = open("PythonPC/img/temp/temp_image.jpg", "wb")
             file.write(responseImage.content)
@@ -584,8 +597,8 @@ def getProductInfo(art,barcode):
             card += barcode + '&source=1'
 
             responseCard = requests.get(card)
-            writeResponseToLog(response.url)
-            writeResponseToLog(responseCard.url)
+
+            loging.writeResponseToLog(responseCard.url,response.elapsed.total_seconds())
 
             responseMini1Card = responseCard.replace('{"Bonus":' ,'')
             bonusStr = responseMini1Card[0:responseMini1Card.index(',')]
@@ -650,7 +663,7 @@ def checkPing():
 
             ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/error_server_dark.jpg"))
 
-            writeResponseToLog("Internet connection error")
+            loging.writeError("Internet connection error")
 
     if ui.statusEthernet == True:
 
@@ -681,7 +694,7 @@ def checkPing():
 
             ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/Offline_dark_2.jpg"))
 
-            writeResponseToLog("Servers connection error")
+            loging.writeError("Servers connection error")
 
 def advertising ():
     
@@ -690,9 +703,9 @@ def advertising ():
 
         hideForms() 
 
-        for root, dirs, files in os.walk("img/advertise"): 
+        for root, dirs, files in os.walk("PythonPC/img/advertise"): 
             for filename in files:                          
-                ui.image.setPixmap(QtGui.QPixmap("img/advertise/" + files[ui.countAdvertising]))
+                ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/advertise/" + files[ui.countAdvertising]))
         
         if( ui.secondAdvertising == 8):
             ui.secondAdvertising = 0
@@ -747,7 +760,7 @@ def timerCheckPing():
     checkPing()
     ui.timerCheckPing = QtCore.QTimer()
     ui.timerCheckPing.timeout.connect(checkPing)
-    ui.timerCheckPing.start(10000)
+    ui.timerCheckPing.start(60000)
 
 def timerAdvertising():
 
@@ -761,12 +774,14 @@ ui.countAdvertising = 0
 ui.secondAdvertising = 8
 ui.apiKey="39fa302c1a6b40e19020b376c9becb3b"
 ui.apiStock="235"
-ui.apiDevice="0000"
+ui.apiDevice="DeviceName"
+ui.apiNumberBody="0000"
 
+loging.createLogs()
+loging.writeInfo('Starting')
 timerCheckPing()
 timerAdvertising()
-#getInfo()
-createLog()
+getInfo()
 MainWindow.showMaximized()
 #MainWindow.setWindowFlags(QtCore.Qt.CustomizeWindowHint)       
 ui.barcode.textChanged.connect(sync_lineEdit)

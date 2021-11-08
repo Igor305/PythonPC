@@ -32,11 +32,3 @@ def writeResponseToLog(url,time):
     date_now = checkDate()
     logging.basicConfig(filename='PythonPC/logs/ %s.log' % date_now, format='%(asctime)s | %(levelname)s |\n%(message)s\n' + separator + separator + separator, level=logging.INFO)
     logging.info(url + '\nResponse time:%s' % time)
-
-    '''
-    log = open("logs/ %s.txt" % date_now, "a")
-   
-    log.write("|" + date_time_now + "|" + url + "\n|")
-    log.write(separator + separator + separator + "\n")
-    log.close()
-    '''

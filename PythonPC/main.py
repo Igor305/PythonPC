@@ -4,6 +4,8 @@ from adafruit_platformdetect import board
 from interface import Ui_MainWindow
 from PyQt5.QtCore import QThread, pyqtSignal
 from datetime import datetime
+import adafruit_dht
+from board import *
 from ping3 import ping
 
 import socket
@@ -12,9 +14,7 @@ import sys
 import time
 import os
 
-import loging
-import adafruit_dht
-from board import *
+import pc_logging
 
 
 # Create application
@@ -312,7 +312,7 @@ def barcodePressedEnter():
             ui.actualDeviceName = actualNumberShop + "-P" + ui.tempNumberPC
 
             changeConfig()
-            loging.writeInfo("ChangeConfig | Store number:"+ ui.tempNumberShop + " | Price checker number:" + ui.tempNumberPC + " | IP address:" + ui.tempIp + " | Body number:" + ui.tempNumberBody)
+            pc_logging.writeInfo("ChangeConfig | Store number:"+ ui.tempNumberShop + " | Price checker number:" + ui.tempNumberPC + " | IP address:" + ui.tempIp + " | Body number:" + ui.tempNumberBody)
             os.system("sudo reboot")
 
         elif (barcode == "772211004"):
@@ -371,7 +371,7 @@ def barcodePressedEnter():
         ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/systemInfo_dark.jpg"))
 
         barcodeReset()
-        loging.writeInfo("BarcodeReset | Store number:235 | Price checker number:DeviceNumber | Body number:0000")      
+        pc_logging.writeInfo("BarcodeReset | Store number:235 | Price checker number:DeviceNumber | Body number:0000")      
         os.system("sudo reboot")
 
     # Check Employment
@@ -386,7 +386,8 @@ def barcodePressedEnter():
             emp += barcode
 
             response = requests.get(emp)
-            loging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+            pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+            response = response.text
             
             responseMini1 = response.replace('{"Id":', '')
             idStr = responseMini1[0:responseMini1.index(',')]
@@ -470,7 +471,7 @@ def getProductInfo(art,barcode):
     try:
         response = requests.get(art)
 
-        loging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+        pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
 
         responseMini1 = response.text.replace('{"Barcode":' ,'')
 
@@ -574,7 +575,7 @@ def getProductInfo(art,barcode):
             
             responseImage = requests.get(image)           
 
-            loging.writeResponseToLog(responseImage.url,response.elapsed.total_seconds())
+            pc_logging.writeResponseToLog(responseImage.url,response.elapsed.total_seconds())
 
             file = open("PythonPC/img/temp/temp_image.jpg", "wb")
             file.write(responseImage.content)
@@ -596,9 +597,11 @@ def getProductInfo(art,barcode):
             card = 'http://' + ui.apiAddress + '/card?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&card='
             card += barcode + '&source=1'
 
-            responseCard = requests.get(card)
+            responseCard = requests.get(card)          
 
-            loging.writeResponseToLog(responseCard.url,response.elapsed.total_seconds())
+            pc_logging.writeResponseToLog(responseCard.url,response.elapsed.total_seconds())
+
+            responseCard = responseCard.text
 
             responseMini1Card = responseCard.replace('{"Bonus":' ,'')
             bonusStr = responseMini1Card[0:responseMini1Card.index(',')]
@@ -663,7 +666,7 @@ def checkPing():
 
             ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/error_server_dark.jpg"))
 
-            loging.writeError("Internet connection error")
+            pc_logging.writeError("Internet connection error")
 
     if ui.statusEthernet == True:
 
@@ -694,7 +697,7 @@ def checkPing():
 
             ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/resources/Offline_dark_2.jpg"))
 
-            loging.writeError("Servers connection error")
+            pc_logging.writeError("Servers connection error")
 
 def advertising ():
     
@@ -702,14 +705,13 @@ def advertising ():
         ui.barcode.setText("")
 
         hideForms() 
-
         for root, dirs, files in os.walk("PythonPC/img/advertise"): 
-            for filename in files:                          
-                ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/advertise/" + files[ui.countAdvertising]))
-        
+                for filename in files:                          
+                    ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/advertise/" + files[ui.countAdvertising]))
+
         if( ui.secondAdvertising == 8):
             ui.secondAdvertising = 0
-            ui.image.setPixmap(QtGui.QPixmap("advertise/" + files[ui.countAdvertising]))
+            ui.image.setPixmap(QtGui.QPixmap("PythonPC/img/advertise/" + files[ui.countAdvertising]))
             ui.countAdvertising +=1
 
         if (ui.countAdvertising > len(files)-1 ):
@@ -777,13 +779,13 @@ ui.apiStock="235"
 ui.apiDevice="DeviceName"
 ui.apiNumberBody="0000"
 
-loging.createLogs()
-loging.writeInfo('Starting')
+pc_logging.createLogs()
+pc_logging.writeInfo('Starting')
 timerCheckPing()
 timerAdvertising()
 getInfo()
 MainWindow.showMaximized()
-#MainWindow.setWindowFlags(QtCore.Qt.CustomizeWindowHint)       
+#MainWindow.setWindowFlags(QtCore.Qt.CustomizeWindowHint)    
 ui.barcode.textChanged.connect(sync_lineEdit)
 ui.barcode.returnPressed.connect(barcodePressedEnter)
 ui.progressBarWorker = ProgressBarWorker()

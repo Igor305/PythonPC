@@ -4,8 +4,8 @@ from adafruit_platformdetect import board
 from interface import Ui_MainWindow
 from PyQt5.QtCore import QThread, pyqtSignal
 from datetime import datetime
-#import adafruit_dht
-#from board import *
+import adafruit_dht
+from board import *
 from ping3 import ping
 
 import socket
@@ -57,7 +57,7 @@ class ProgressBarWorker(QThread):
         ui.isStop = True
 
 # Get System Info
-'''
+
 def getInfo():
     
     deviceName = socket.gethostname()
@@ -121,13 +121,13 @@ def getInfo():
     ui.temperatureOut.setText(f"Температура внеш.: {temperature:.2f}°C")
     ui.humidity.setText(f"Влажность: {humidity:.2f}") 
     
-    if (os.path.exists("PythonPC/deviceCaseNum.conf")):
-        numberBody = open("PythonPC/deviceCaseNum.conf", "r")
+    if (os.path.exists("deviceCaseNum.conf")):
+        numberBody = open("deviceCaseNum.conf", "r")
         ui.apiNumberBody = numberBody.read()
         ui.numberBody.setText("Номер корпуса: " + ui.apiNumberBody)
         numberBody.close()
     else:
-        numberBody = open("PythonPC/deviceCaseNum.conf", "w")
+        numberBody = open("deviceCaseNum.conf", "w")
         numberBody.write(ui.apiNumberBody)
         numberBody.close()
     
@@ -137,7 +137,7 @@ def changeConfig():
     
     os.system("sudo hostnamectl set-hostname " + ui.actualDeviceName)
 
-    newIp = open ("PythonPC/Ip.conf", "w")
+    newIp = open ("Ip.conf", "w")
 
     minitempIp = ui.tempIp[0 : ui.tempIp.rfind('.')] 
 
@@ -150,7 +150,7 @@ def changeConfig():
     Ip.write(ip)
     Ip.close()
 
-    nBody = open ("PythonPC/deviceCaseNum.conf", "w")
+    nBody = open ("deviceCaseNum.conf", "w")
     nBody.write(ui.tempNumberBody)
     nBody.close()
     
@@ -172,7 +172,7 @@ def barcodeReset():
 
     ui.tempIp = ip
 
-    newIp = open ("PythonPC/Ip.conf", "w")
+    newIp = open ("Ip.conf", "w")
 
     minitempIp = ui.tempIp[0 : ui.tempIp.rfind('.')] 
 
@@ -187,10 +187,9 @@ def barcodeReset():
 
     ui.tempNumberBody = "0000"
 
-    nBody = open ("PythonPC/deviceCaseNum.conf", "w")
+    nBody = open ("deviceCaseNum.conf", "w")
     nBody.write(ui.tempNumberBody)
     nBody.close()
-'''
 
 # When barcode textChanged
 
@@ -306,7 +305,7 @@ def barcodePressedEnter():
 
             ui.actualDeviceName = actualNumberShop + "-P" + ui.tempNumberPC
 
-            #changeConfig()
+            changeConfig()
             pc_logging.writeInfo("ChangeConfig | Store number:"+ ui.tempNumberShop + " | Price checker number:" + ui.tempNumberPC + " | IP address:" + ui.tempIp + " | Body number:" + ui.tempNumberBody)
             os.system("sudo reboot")
 
@@ -327,7 +326,7 @@ def barcodePressedEnter():
     # Mode viewing info 
 
     elif (barcode == "772211001"):
-        #getInfo()
+        getInfo()
         ui.barcode.setText("")
         ui.statusConfig = -1
         ui.image.setPixmap(QtGui.QPixmap("img/resources/systemInfo_dark.jpg"))
@@ -365,16 +364,17 @@ def barcodePressedEnter():
         ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
         ui.image.setPixmap(QtGui.QPixmap("img/resources/systemInfo_dark.jpg"))
 
-        #barcodeReset()
+        barcodeReset()
         pc_logging.writeInfo("BarcodeReset | Store number:235 | Price checker number:DeviceNumber | Body number:0000")      
         os.system("sudo reboot")
 
     # Check Employment
 
-    elif (barcode.find("ent") == False and ui.statusEthernet == True and ui.failConnenct == False):    
+    elif (barcode.find("ent") == False and ui.statusEthernet == True and ui.failConnenct == False):  
         try: 
             ui.barcode.setText("")
             ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
+            ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1013, 20))
             ui.image.setPixmap(QtGui.QPixmap("img/resources/employeeInfo.png"))
 
             emp = 'http://' + ui.apiAddress + '/emp_info?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&barcode='
@@ -411,6 +411,7 @@ def barcodePressedEnter():
 
         except Exception:
 
+            ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1013, 20))
             ui.barcodeText.setGeometry(QtCore.QRect(40, 550, 0, 0))
             ui.barcodeValue.setGeometry(QtCore.QRect(80, 550, 0, 0))
             ui.amountText.setGeometry(QtCore.QRect(290, 550, 0, 0))
@@ -702,20 +703,26 @@ def advertising ():
 
         ui.barcode.setText("")
         hideForms() 
-        for root, dirs, files in os.walk("img/advertise"): 
-                for filename in files:                          
-                    ui.image.setPixmap(QtGui.QPixmap("img/advertise/" + files[ui.countAdvertising]))
 
-        if( ui.secondAdvertising == 8):
-            ui.secondAdvertising = 0
-            ui.image.setPixmap(QtGui.QPixmap("img/advertise/" + files[ui.countAdvertising]))
-            ui.countAdvertising +=1
+        try:  
 
-        if (ui.countAdvertising > len(files)-1 ):
-            ui.countAdvertising = 0
+            for root, dirs, files in os.walk("img/advertise"): 
+                    for filename in files:                          
+                        ui.image.setPixmap(QtGui.QPixmap("img/advertise/" + files[ui.countAdvertising]))
 
-        ui.secondAdvertising += 1
+            if( ui.secondAdvertising == 8):
+                ui.secondAdvertising = 0
+                ui.image.setPixmap(QtGui.QPixmap("img/advertise/" + files[ui.countAdvertising]))
+                ui.countAdvertising +=1
 
+            if (ui.countAdvertising > len(files)-1 ):
+                ui.countAdvertising = 0
+        
+            ui.secondAdvertising += 1
+        
+        except:
+            ui.image.setPixmap(QtGui.QPixmap("img/resources/default_dark.jpg"))
+         
 def hideForms():
 
     ui.barcode.setGeometry(QtCore.QRect(70, 50, 0, 0))
@@ -770,7 +777,7 @@ def timerCheckProgressBar():
 ui.statusEthernet = True
 ui.statusConfig = 0
 ui.countAdvertising = 0
-ui.secondAdvertising = 8
+ui.secondAdvertising = 1
 ui.apiKey="39fa302c1a6b40e19020b376c9becb3b"
 ui.apiStock="235"
 ui.apiDevice="DeviceName"
@@ -780,7 +787,7 @@ pc_logging.createLogs()
 pc_logging.writeInfo('Starting')
 timerCheckPing()
 timerCheckProgressBar()
-#getInfo()
+getInfo()
 MainWindow.showMaximized()
 #MainWindow.setWindowFlags(QtCore.Qt.CustomizeWindowHint)    
 ui.barcode.textChanged.connect(sync_lineEdit)

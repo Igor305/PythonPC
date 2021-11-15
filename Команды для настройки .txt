@@ -15,5 +15,32 @@ numberBody = /etc/deviceCaseNum.conf
 
 
 
+PYQT5
 
 pyuic5 -x PC.ui -o interface.py
+
+
+
+PyInstaller
+
+git clone https://github.com/pyinstaller/pyinstaller 
+# Alternatively download the zip from https://github.com/pyinstaller/pyinstaller/releases
+cd pyinstaller/bootloader
+python ./waf distclean all # or python3
+cd ../PyInstaller/bootloader/
+ls
+
+file Linux-32bit-arm/run
+
+run: ELF 32-bit LSB executable, ARM, EABI5 version 1 (SYSV), dynamically linked, interpreter /lib/ld-linux-armhf.so.3, for GNU/Linux 3.2.0, BuildID[sha1]=a01c65d74d7d8b483800154dcdd4a5d2aad95d5b, stripped
+
+# Replace ${CLONED_PYINSTALLER_PATH} with the path where you git cloned above
+# Replace ${PATH_TO_YOUR_PROJECT} with the path to your project (where you have the venv)
+
+cp -r ${CLONED_PYINSTALLER_PATH}/PyInstaller/bootloader/Linux-32bit-arm ${PATH_TO_YOUR_PROJECT}/venv/lib/python3.5/site-packages/PyInstaller/bootloader/
+
+# !!! Replace python3.5 with your version
+cp -r ${CLONED_PYINSTALLER_PATH}/PyInstaller/bootloader/Linux-32bit-arm /usr/local/lib/python3.5/dist-packages/PyInstaller/bootloader
+отладка
+
+pyinstaller main.py

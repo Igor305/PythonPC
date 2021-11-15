@@ -3,9 +3,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from adafruit_platformdetect import board
 from interface import Ui_MainWindow
 from PyQt5.QtCore import QThread, pyqtSignal
-from datetime import datetime
-import adafruit_dht
-from board import *
+from datetime import date, datetime
 from ping3 import ping
 
 import socket
@@ -15,6 +13,7 @@ import time
 import os
 
 import pc_logging
+import sensorDHT
 
 
 # Create application
@@ -109,17 +108,10 @@ def getInfo():
         if "Serial" in s:
             ui.serial.setText("Serial: " + s[10:])
 
-    try:
-        SENSOR_PIN = D22
-        dht22 = adafruit_dht.DHT22(SENSOR_PIN, use_pulseio=False)
-        temperature = dht22.temperature
-        humidity = dht22.humidity
-    except:
-        temperature = 0
-        humidity = 0
+    sensorDHTdata = sensorDHT.getSensorData()
 
-    ui.temperatureOut.setText(f"Температура внеш.: {temperature:.2f}°C")
-    ui.humidity.setText(f"Влажность: {humidity:.2f}") 
+    ui.temperatureOut.setText(f"Температура внеш.: {sensorDHTdata[0]:.1f}°C")
+    ui.humidity.setText(f"Влажность: {sensorDHTdata[1]:.1f}") 
     
     if (os.path.exists("deviceCaseNum.conf")):
         numberBody = open("deviceCaseNum.conf", "r")
@@ -633,6 +625,44 @@ def getProductInfo(art,barcode):
 
             ui.image.setPixmap(QtGui.QPixmap("img/resources/merchandiserError.png"))         
 
+def hideForms():
+
+    ui.barcode.setGeometry(QtCore.QRect(70, 50, 0, 0))
+    ui.progressBar.setGeometry(QtCore.QRect(70, 50, 0, 0))
+    ui.deviceName.setGeometry(QtCore.QRect(70, 50, 0, 0))
+    ui.ipAddress.setGeometry(QtCore.QRect(70, 160, 0, 0))
+    ui.ipAddressStatic.setGeometry(QtCore.QRect(70, 270, 0, 0))
+    ui.version.setGeometry(QtCore.QRect(70, 380, 0, 0))
+    ui.numberOS.setGeometry(QtCore.QRect(70, 490, 0, 0))
+    ui.temperatureCPU.setGeometry(QtCore.QRect(600, 50, 0, 0))
+    ui.serial.setGeometry(QtCore.QRect(600, 160, 0, 0))
+    ui.temperatureOut.setGeometry(QtCore.QRect(600, 270, 0, 0))
+    ui.humidity.setGeometry(QtCore.QRect(600, 380, 0, 0))
+    ui.numberBody.setGeometry(QtCore.QRect(600, 490, 0, 0))
+    ui.configTitle.setGeometry(QtCore.QRect(0, 60, 0, 0))
+    ui.configText.setGeometry(QtCore.QRect(0, 250, 0, 0))
+    ui.configValue.setGeometry(QtCore.QRect(0, 60, 0, 0))
+
+    ui.barcodeText.setGeometry(QtCore.QRect(40, 550, 0, 0))
+    ui.barcodeValue.setGeometry(QtCore.QRect(80, 550, 0, 0))
+    ui.amountText.setGeometry(QtCore.QRect(290, 550, 0, 0))
+    ui.amountValue.setGeometry(QtCore.QRect(380, 550, 0, 0))
+    ui.codeText.setGeometry(QtCore.QRect(420, 550, 0, 0))
+    ui.codeValue.setGeometry(QtCore.QRect(460, 550, 0, 0))
+    ui.name.setGeometry(QtCore.QRect(80, 320, 0, 0))
+    ui.price.setGeometry(QtCore.QRect(250, 200, 0, 0))
+    ui.nameCard.setGeometry(QtCore.QRect(120, 180, 0, 0))
+    ui.bonus.setGeometry(QtCore.QRect(0, 210, 0, 0))
+    ui.nameEmp.setGeometry(QtCore.QRect(0, 160, 0, 0))
+    ui.statusEmp.setGeometry(QtCore.QRect(0, 320, 0, 0))
+    ui.timeEmp.setGeometry(QtCore.QRect(0, 400, 0, 0))
+    ui.productImage.setGeometry(QtCore.QRect(530, 30, 0, 0))
+    ui.pricePenny.setGeometry(QtCore.QRect(380, 120, 0, 0))
+    ui.priceCurrency.setGeometry(QtCore.QRect(380, 190, 0, 0))
+    ui.priceOld.setGeometry(QtCore.QRect(180, 30, 0, 0))
+    ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 0, 0))
+    ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 0, 0))
+
 def checkPing():
 
     # Confirm API server
@@ -722,44 +752,6 @@ def advertising ():
         
         except:
             ui.image.setPixmap(QtGui.QPixmap("img/resources/default_dark.jpg"))
-         
-def hideForms():
-
-    ui.barcode.setGeometry(QtCore.QRect(70, 50, 0, 0))
-    ui.progressBar.setGeometry(QtCore.QRect(70, 50, 0, 0))
-    ui.deviceName.setGeometry(QtCore.QRect(70, 50, 0, 0))
-    ui.ipAddress.setGeometry(QtCore.QRect(70, 160, 0, 0))
-    ui.ipAddressStatic.setGeometry(QtCore.QRect(70, 270, 0, 0))
-    ui.version.setGeometry(QtCore.QRect(70, 380, 0, 0))
-    ui.numberOS.setGeometry(QtCore.QRect(70, 490, 0, 0))
-    ui.temperatureCPU.setGeometry(QtCore.QRect(600, 50, 0, 0))
-    ui.serial.setGeometry(QtCore.QRect(600, 160, 0, 0))
-    ui.temperatureOut.setGeometry(QtCore.QRect(600, 270, 0, 0))
-    ui.humidity.setGeometry(QtCore.QRect(600, 380, 0, 0))
-    ui.numberBody.setGeometry(QtCore.QRect(600, 490, 0, 0))
-    ui.configTitle.setGeometry(QtCore.QRect(0, 60, 0, 0))
-    ui.configText.setGeometry(QtCore.QRect(0, 250, 0, 0))
-    ui.configValue.setGeometry(QtCore.QRect(0, 60, 0, 0))
-
-    ui.barcodeText.setGeometry(QtCore.QRect(40, 550, 0, 0))
-    ui.barcodeValue.setGeometry(QtCore.QRect(80, 550, 0, 0))
-    ui.amountText.setGeometry(QtCore.QRect(290, 550, 0, 0))
-    ui.amountValue.setGeometry(QtCore.QRect(380, 550, 0, 0))
-    ui.codeText.setGeometry(QtCore.QRect(420, 550, 0, 0))
-    ui.codeValue.setGeometry(QtCore.QRect(460, 550, 0, 0))
-    ui.name.setGeometry(QtCore.QRect(80, 320, 0, 0))
-    ui.price.setGeometry(QtCore.QRect(250, 200, 0, 0))
-    ui.nameCard.setGeometry(QtCore.QRect(120, 180, 0, 0))
-    ui.bonus.setGeometry(QtCore.QRect(0, 210, 0, 0))
-    ui.nameEmp.setGeometry(QtCore.QRect(0, 160, 0, 0))
-    ui.statusEmp.setGeometry(QtCore.QRect(0, 320, 0, 0))
-    ui.timeEmp.setGeometry(QtCore.QRect(0, 400, 0, 0))
-    ui.productImage.setGeometry(QtCore.QRect(530, 30, 0, 0))
-    ui.pricePenny.setGeometry(QtCore.QRect(380, 120, 0, 0))
-    ui.priceCurrency.setGeometry(QtCore.QRect(380, 190, 0, 0))
-    ui.priceOld.setGeometry(QtCore.QRect(180, 30, 0, 0))
-    ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 0, 0))
-    ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 0, 0))
 
 def timerCheckPing():
 
@@ -774,6 +766,12 @@ def timerCheckProgressBar():
     ui.timerCheckProgressBar.timeout.connect(checkProgressBar)
     ui.timerCheckProgressBar.start(1000)
 
+def timerTemperatureAndHumidity():
+
+    ui.timerTemperatureAndHumidity = QtCore.QTimer()
+    ui.timerTemperatureAndHumidity.timeout.connect(lambda: sensorDHT.getTemperatureAndHumidity(ui.apiStock))
+    ui.timerTemperatureAndHumidity.start(300000)
+
 ui.statusEthernet = True
 ui.statusConfig = 0
 ui.countAdvertising = 0
@@ -785,9 +783,10 @@ ui.apiNumberBody="0000"
 
 pc_logging.createLogs()
 pc_logging.writeInfo('Starting')
+getInfo()
 timerCheckPing()
 timerCheckProgressBar()
-getInfo()
+timerTemperatureAndHumidity()
 MainWindow.showMaximized()
 #MainWindow.setWindowFlags(QtCore.Qt.CustomizeWindowHint)    
 ui.barcode.textChanged.connect(sync_lineEdit)

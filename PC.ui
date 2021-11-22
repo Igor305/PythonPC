@@ -67,7 +67,8 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">color: rgb(0, 170, 0);</string>
+     <string notr="true">color: green;
+selection-background-color: green;</string>
     </property>
     <property name="textVisible">
      <bool>false</bool>
@@ -76,7 +77,7 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
    <widget class="QLabel" name="deviceName">
     <property name="geometry">
      <rect>
-      <x>70</x>
+      <x>50</x>
       <y>50</y>
       <width>0</width>
       <height>0</height>
@@ -100,7 +101,7 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
    <widget class="QLabel" name="ipAddress">
     <property name="geometry">
      <rect>
-      <x>70</x>
+      <x>50</x>
       <y>160</y>
       <width>0</width>
       <height>0</height>
@@ -124,7 +125,7 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
    <widget class="QLabel" name="ipAddressStatic">
     <property name="geometry">
      <rect>
-      <x>70</x>
+      <x>50</x>
       <y>270</y>
       <width>0</width>
       <height>0</height>
@@ -148,7 +149,7 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
    <widget class="QLabel" name="version">
     <property name="geometry">
      <rect>
-      <x>70</x>
+      <x>50</x>
       <y>380</y>
       <width>0</width>
       <height>0</height>
@@ -172,7 +173,7 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
    <widget class="QLabel" name="numberOS">
     <property name="geometry">
      <rect>
-      <x>70</x>
+      <x>50</x>
       <y>490</y>
       <width>0</width>
       <height>0</height>
@@ -196,7 +197,7 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
    <widget class="QLabel" name="temperatureCPU">
     <property name="geometry">
      <rect>
-      <x>600</x>
+      <x>580</x>
       <y>50</y>
       <width>0</width>
       <height>0</height>
@@ -220,7 +221,7 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
    <widget class="QLabel" name="serial">
     <property name="geometry">
      <rect>
-      <x>600</x>
+      <x>580</x>
       <y>140</y>
       <width>0</width>
       <height>0</height>
@@ -244,7 +245,7 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
    <widget class="QLabel" name="temperatureOut">
     <property name="geometry">
      <rect>
-      <x>600</x>
+      <x>580</x>
       <y>260</y>
       <width>0</width>
       <height>0</height>
@@ -268,7 +269,7 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
    <widget class="QLabel" name="humidity">
     <property name="geometry">
      <rect>
-      <x>600</x>
+      <x>580</x>
       <y>370</y>
       <width>0</width>
       <height>0</height>
@@ -292,7 +293,7 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
    <widget class="QLabel" name="numberBody">
     <property name="geometry">
      <rect>
-      <x>600</x>
+      <x>580</x>
       <y>490</y>
       <width>0</width>
       <height>0</height>
@@ -324,7 +325,7 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="font">
      <font>
-      <pointsize>12</pointsize>
+      <pointsize>15</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -358,15 +359,15 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
    <widget class="QLabel" name="amountText">
     <property name="geometry">
      <rect>
-      <x>240</x>
-      <y>530</y>
+      <x>40</x>
+      <y>515</y>
       <width>0</width>
       <height>0</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <pointsize>12</pointsize>
+      <pointsize>15</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -379,8 +380,8 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
    <widget class="QLabel" name="amountValue">
     <property name="geometry">
      <rect>
-      <x>300</x>
-      <y>530</y>
+      <x>100</x>
+      <y>515</y>
       <width>0</width>
       <height>0</height>
      </rect>
@@ -408,7 +409,7 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="font">
      <font>
-      <pointsize>12</pointsize>
+      <pointsize>15</pointsize>
      </font>
     </property>
     <property name="styleSheet">
@@ -453,9 +454,9 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
     </property>
     <property name="font">
      <font>
-      <pointsize>30</pointsize>
-      <weight>75</weight>
-      <bold>true</bold>
+      <pointsize>26</pointsize>
+      <weight>50</weight>
+      <bold>false</bold>
      </font>
     </property>
     <property name="styleSheet">
@@ -833,6 +834,48 @@ border-radius: 30px;
       <width>0</width>
       <height>0</height>
      </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="keyKT">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>550</y>
+      <width>0</width>
+      <height>0</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>15</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color:rgb(193, 193, 193)</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="keyKTValue">
+    <property name="geometry">
+     <rect>
+      <x>440</x>
+      <y>550</y>
+      <width>0</width>
+      <height>0</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>15</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color:rgb(193, 193, 193)</string>
     </property>
     <property name="text">
      <string/>

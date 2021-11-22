@@ -19,7 +19,7 @@ PYQT5
 
 pyuic5 -x PC.ui -o interface.py
 
-
+MainWindow.setWindowFlags(QtCore.Qt.CustomizeWindowHint) 
 
 PyInstaller
 
@@ -44,3 +44,9 @@ cp -r ${CLONED_PYINSTALLER_PATH}/PyInstaller/bootloader/Linux-32bit-arm /usr/loc
 отладка
 
 pyinstaller main.py
+
+
+Ошибка libGLESv2.so.2:
+
+sudo apt-get update -y
+sudo apt-get install -y libgles2-mesa

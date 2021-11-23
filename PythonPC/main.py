@@ -1,5 +1,5 @@
-import pc_logging
-import sensorDHT
+#import pc_logging
+#import sensorDHT
 
 from genericpath import exists
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -27,6 +27,7 @@ MainWindow.show()
 # Logic
 
 pathImg = "/home/pi/PricePython/"
+#pathImg = ''
 
 # QThead For ProgressBar
 
@@ -36,18 +37,20 @@ class ProgressBarWorker(QThread):
 
     def __init__(ui):
         super(ProgressBarWorker,ui).__init__()
-        ui.progress = 105
+        ui.progress = 103
         ui.isStop = False
 
     def run(ui):
         while True:
-            time.sleep(0.08)
-            ui.progress -= 1
-            ui.change_value.emit(ui.progress)
+
+            if (ui.progress > 0):
+                time.sleep(0.08)
+                ui.progress -= 1
+                ui.change_value.emit(ui.progress)
             
             if (ui.isStop == True):
                 ui.isStop = False
-                ui.progress = 105
+                ui.progress = 103
                 ui.run()
             
             if (ui.progress == 0):
@@ -55,7 +58,7 @@ class ProgressBarWorker(QThread):
 
     def stop(ui):
         ui.isStop = True
-
+'''
 # Get System Info
 
 def getInfo():
@@ -183,7 +186,7 @@ def barcodeReset():
     nBody = open ("deviceCaseNum.conf", "w")
     nBody.write(ui.tempNumberBody)
     nBody.close()
-
+'''
 # When barcode textChanged
 
 def sync_lineEdit():
@@ -210,6 +213,9 @@ def sync_lineEdit():
 # When Press Enter
 
 def barcodePressedEnter():
+    ui.barcodeCopy = ''
+    ui.progressBarWorker.stop()
+    ui.progressBarThread.start()  
     barcode = ui.barcode.text() 
 
     # Mode Config
@@ -298,8 +304,8 @@ def barcodePressedEnter():
 
             ui.actualDeviceName = actualNumberShop + "-P" + ui.tempNumberPC
 
-            changeConfig()
-            pc_logging.writeInfo("ChangeConfig | Store number:"+ ui.tempNumberShop + " | Price checker number:" + ui.tempNumberPC + " | IP address:" + ui.tempIp + " | Body number:" + ui.tempNumberBody)
+            #changeConfig()
+            #pc_logging.writeInfo("ChangeConfig | Store number:"+ ui.tempNumberShop + " | Price checker number:" + ui.tempNumberPC + " | IP address:" + ui.tempIp + " | Body number:" + ui.tempNumberBody)
             os.system("sudo reboot")
 
         elif (barcode == "772211004"):
@@ -319,7 +325,7 @@ def barcodePressedEnter():
     # Mode viewing info 
 
     elif (barcode == "772211001"):
-        getInfo()
+        #getInfo()
         ui.barcode.setText("")
         ui.statusConfig = -1
         ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/systemInfo_dark.jpg"))
@@ -357,8 +363,8 @@ def barcodePressedEnter():
         ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
         ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/systemInfo_dark.jpg"))
 
-        barcodeReset()
-        pc_logging.writeInfo("BarcodeReset | Store number:235 | Price checker number:DeviceNumber | Body number:0000")      
+        #barcodeReset()
+        #pc_logging.writeInfo("BarcodeReset | Store number:235 | Price checker number:DeviceNumber | Body number:0000")      
         os.system("sudo reboot")
 
     # Check Employment
@@ -374,7 +380,7 @@ def barcodePressedEnter():
             emp += barcode
 
             response = requests.get(emp)
-            pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+            #pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
             response = response.text
 
             responseMini1 = response.replace('{"Id":', '')
@@ -440,7 +446,7 @@ def barcodePressedEnter():
             ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
             ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/productBack_dark.jpg"))
             art = 'http://' + ui.apiAddress + '/art?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&barcode=' + barcode
-            km ='http://' + ui.apiAddress + '/category?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode
+            km ='http://' + ui.apiAddress + '/category?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&barcode=' + barcode
             getProductInfo(art,km,barcode)
 
         # Check Code
@@ -462,7 +468,7 @@ def getProductInfo(art,km, barcode):
         
         try:
             response = requests.get(km)   
-            pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+            #pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
 
             kmfind = response.text.find('"KM":{"Id":')
             kmResponse = response.text[kmfind + 11:]
@@ -472,7 +478,7 @@ def getProductInfo(art,km, barcode):
             print(km)
 
         response = requests.get(art)
-        pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+        #pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
 
         responseMini1 = response.text.replace('{"Barcode":' ,'')
 
@@ -580,7 +586,7 @@ def getProductInfo(art,km, barcode):
             
             responseImage = requests.get(image)           
 
-            pc_logging.writeResponseToLog(responseImage.url,response.elapsed.total_seconds())
+            #pc_logging.writeResponseToLog(responseImage.url,response.elapsed.total_seconds())
 
             file = open(pathImg + "img/temp/temp_image.jpg", "wb")
             file.write(responseImage.content)
@@ -604,7 +610,7 @@ def getProductInfo(art,km, barcode):
 
             responseCard = requests.get(card)          
 
-            pc_logging.writeResponseToLog(responseCard.url,response.elapsed.total_seconds())
+            #pc_logging.writeResponseToLog(responseCard.url,response.elapsed.total_seconds())
 
             responseCard = responseCard.text
 
@@ -711,7 +717,7 @@ def checkPing():
 
             ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/error_server_dark.jpg"))
 
-            pc_logging.writeError("Internet connection error")
+            #pc_logging.writeError("Internet connection error")
 
     if ui.statusEthernet == True:
 
@@ -738,11 +744,26 @@ def checkPing():
 
             ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/Offline_dark_2.jpg"))
 
-            pc_logging.writeError("Servers connection error")
+            #pc_logging.writeError("Servers connection error")
+
+def checkInput():
+
+    length = len(ui.barcode.text()) - len(ui.barcodeCopy)
+    print(length)
+
+    if (length > 12):
+        barcodePressedEnter()
+
+    if (length <= 12 and length != 0):
+        sync_lineEdit()
+    
+    ui.barcodeCopy = ui.barcode.text()
 
 def checkProgressBar():
+
     if (ui.progressBar.value() < 1):
         advertising()
+    
 
 def advertising ():
     
@@ -784,12 +805,11 @@ def checkUpdate():
         changeFiles = "http://10.13.153.10/api/price/getFiles?ip=" + ip
         requests.get(changeFiles)  
     '''
-def timerCheckPing():
+def timerCheckInput():
 
-    checkPing()
-    ui.timerCheckPing = QtCore.QTimer()
-    ui.timerCheckPing.timeout.connect(checkPing)
-    ui.timerCheckPing.start(60000)
+    ui.timerCheckInput = QtCore.QTimer()
+    ui.timerCheckInput.timeout.connect(checkInput)
+    ui.timerCheckInput.start(100)
 
 def timerCheckProgressBar():
 
@@ -797,18 +817,24 @@ def timerCheckProgressBar():
     ui.timerCheckProgressBar.timeout.connect(checkProgressBar)
     ui.timerCheckProgressBar.start(1000)
 
+def timerCheckPing():
+
+    checkPing()
+    ui.timerCheckPing = QtCore.QTimer()
+    ui.timerCheckPing.timeout.connect(checkPing)
+    ui.timerCheckPing.start(60000)
+
 def timerTemperatureAndHumidity():
 
     ui.timerTemperatureAndHumidity = QtCore.QTimer()
-    ui.timerTemperatureAndHumidity.timeout.connect(lambda: sensorDHT.getTemperatureAndHumidity(ui.apiStock))
+    #ui.timerTemperatureAndHumidity.timeout.connect(lambda: sensorDHT.getTemperatureAndHumidity(ui.apiStock))
     ui.timerTemperatureAndHumidity.start(300000)
 
 def timerCheckUpdate():
 
     ui.timerCheckUpdate = QtCore.QTimer()
     ui.timerCheckUpdate.timeout.connect(checkUpdate)
-    ui.timerCheckUpdate.start(2000)
-
+    ui.timerCheckUpdate.start(3600000)
 
 ui.statusEthernet = True
 ui.statusConfig = 0
@@ -819,17 +845,21 @@ ui.apiStock="235"
 ui.apiDevice="DeviceName"
 ui.apiNumberBody="0000"
 ui.actualVersion="1.0.0.0"
+ui.barcodeCopy = ''
+ui.source = 0
 
-pc_logging.createLogs()
-pc_logging.writeInfo('Starting')
-getInfo()
-timerCheckPing()
+#pc_logging.createLogs()
+#pc_logging.writeInfo('Starting')
+#getInfo()
+timerCheckInput()
 timerCheckProgressBar()
+timerCheckPing()
 timerTemperatureAndHumidity()
 #timerCheckUpdate()
 MainWindow.showMaximized()
 ui.barcode.text()
-ui.barcode.textChanged.connect(sync_lineEdit)
+
+#ui.barcode.textEdited.connect(sync_lineEdit)
 ui.barcode.returnPressed.connect(barcodePressedEnter)
 ui.progressBarWorker = ProgressBarWorker()
 ui.progressBarThread = QThread()

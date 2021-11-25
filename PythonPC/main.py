@@ -9,10 +9,10 @@ from PyQt5.QtCore import QThread, pyqtSignal
 from datetime import date, datetime
 from ping3 import ping
 
-import socket
 import requests 
-import sys
+import socket
 import time
+import sys
 import os
 
 # Create application
@@ -26,8 +26,8 @@ MainWindow.show()
 
 # Logic
 
-pathImg = "/home/pi/PricePython/"
-#pathImg = ''
+#pathImg = "/home/pi/PricePython/"
+pathImg = ''
 
 # QThead For ProgressBar
 
@@ -190,6 +190,7 @@ def barcodeReset():
 # When barcode textChanged
 
 def sync_lineEdit():
+    ui.countRel = 0
     ui.progressBar.setValue(100)
     ui.progressBarThread.start()  
 
@@ -213,6 +214,7 @@ def sync_lineEdit():
 # When Press Enter
 
 def barcodePressedEnter():
+    ui.countRel = 0
     ui.barcodeCopy = ''
     ui.progressBarWorker.stop()
     ui.progressBarThread.start()  
@@ -447,7 +449,8 @@ def barcodePressedEnter():
             ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/productBack_dark.jpg"))
             art = 'http://' + ui.apiAddress + '/art?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&barcode=' + barcode
             km ='http://' + ui.apiAddress + '/category?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&barcode=' + barcode
-            getProductInfo(art,km,barcode)
+            rel = 'http://' + ui.apiAddress + '/rel?key='+ ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&barcode=' + barcode +'&source=1'
+            getProductInfo(art, km, rel, barcode)
 
         # Check Code
 
@@ -458,193 +461,298 @@ def barcodePressedEnter():
             ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/productBack_dark.jpg"))
             art = 'http://' + ui.apiAddress + '/art?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode +'&source=1'
             km ='http://' + ui.apiAddress + '/category?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode +'&source=1'
-            getProductInfo(art,km,barcode)
+            rel = 'http://' + ui.apiAddress + '/rel?key='+ ui.apiKey + '&stock=236&device=' + ui.apiDevice + '&code=' + barcode +'&source=1'
+            getProductInfo(art, km, rel, barcode)
 
 # Info For product 
 
-def getProductInfo(art,km, barcode):
+def getProductInfo(art, km, rel, barcode):
     try:
-        ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1013, 20))
-        
+        # Get related products
         try:
-            response = requests.get(km)   
-            #pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
-
-            kmfind = response.text.find('"KM":{"Id":')
-            kmResponse = response.text[kmfind + 11:]
-            km = kmResponse[0:kmResponse.index(',')]
+            response = requests.get(rel).json()
+            if(len(response) > 0):
+                ui.countRel = len(response)
+                ui.rels = response
 
         except:
-            print(km)
+            print(rel)
 
-        response = requests.get(art)
+        getProduct(art,km)
+              
+    except Exception:  
+
+        try:
+            getCard(barcode)          
+            
+        except Exception:
+
+            hideForms()
+            ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/merchandiserError.png")) 
+            ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1013, 20))
+
+# Get info product  
+
+def getProduct(art,km):
+ 
+    ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1013, 20))
+
+    try:
+        km = getKM(km)
+    except:
+        print(km)
+
+    response = requests.get(art).json()
+    #pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+
+    barcode = response["Barcode"]
+    code = response["Id"]
+    name = response["Name"]
+    price = response["Price"]
+    priceOld = response["PriceOld"]
+    qty = response["Qty"]
+
+    if (name == None):
+
+        ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/merchandiserError.png")) 
+        return
+
+    priceStr = str("%.0f" % price)
+    penny = str("%.0f" % ((price%1) * 100))
+    
+    if (penny == "0"):
+        penny = "00"
+    
+    if (priceOld != None):
+        priceOldStr = str("%.0f" % priceOld)
+        pennyOld = str("%.0f" % ((priceOld%1) * 100) )
+
+        if (pennyOld == "0"):
+            pennyOld = "00"
+
+    ui.barcodeText.setText("Ш/К:")
+    ui.barcodeValue.setText(str(barcode))
+    ui.amountText.setText("Кількість:")
+    ui.amountValue.setText(str(qty))
+    ui.codeText.setText("Код:")
+    ui.keyKTValue.setText(str(km))
+    ui.keyKT.setText("Код КТ:")
+    ui.codeValue.setText(str(code))
+    ui.name.setText(name)
+    ui.price.setText(priceStr)
+    ui.pricePenny.setText(penny)
+    ui.priceCurrency.setText("грн")
+
+    if (priceOld != None):
+        ui.priceOld.setText(priceOldStr)
+        ui.priceOldPenny.setText(pennyOld)
+        ui.priceOldCurrency.setText("грн")
+        
+        if (priceOld < 10):
+            ui.priceOld.setGeometry(QtCore.QRect(350, 30, 100, 100))
+            ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 200, 50))
+            ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 200, 150))
+
+        elif (priceOld < 100):
+            ui.priceOld.setGeometry(QtCore.QRect(270, 30, 250, 100))
+            ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 200, 50))
+            ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 200, 150))
+
+        elif (priceOld >= 100):
+            ui.priceOld.setGeometry(QtCore.QRect(180, 30, 250, 100))
+            ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 200, 50))
+            ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 200, 150))
+  
+    ui.barcodeText.setGeometry(QtCore.QRect(35, 550, 80, 20))
+    ui.barcodeValue.setGeometry(QtCore.QRect(90, 550, 200, 20))
+    ui.amountText.setGeometry(QtCore.QRect(35, 525, 100, 20))
+    ui.amountValue.setGeometry(QtCore.QRect(140, 525, 80, 20))
+    ui.codeText.setGeometry(QtCore.QRect(400, 525, 80, 20))
+    ui.codeValue.setGeometry(QtCore.QRect(450, 525, 80, 20))
+    ui.keyKT.setGeometry(QtCore.QRect(400, 550, 80, 20))
+    ui.keyKTValue.setGeometry(QtCore.QRect(480, 550, 80, 20))
+    font = QtGui.QFont()
+    font.setPointSize(26)
+    font.setBold(False)
+    font.setWeight(50)
+    ui.name.setFont(font)
+    ui.name.setWordWrap(True)
+    ui.name.setGeometry(QtCore.QRect(40, 380, 450, 150)) 
+    font.setPointSize(140)
+    font.setBold(True)
+    font.setWeight(75)
+    ui.price.setFont(font)  
+    font.setPointSize(65)
+    font.setBold(True)
+    font.setWeight(75)
+    ui.pricePenny.setFont(font) 
+    font.setPointSize(55)
+    ui.priceCurrency.setFont(font) 
+    ui.priceCurrency.setStyleSheet("color: rgb(255, 238, 0);")
+
+    if (price < 10):
+        ui.price.setGeometry(QtCore.QRect(0, 100, 450, 300))
+        ui.pricePenny.setGeometry(QtCore.QRect(300, 120, 200, 200))
+        ui.priceCurrency.setGeometry(QtCore.QRect(300, 190, 200, 200))
+
+    elif (price < 100):
+        ui.price.setGeometry(QtCore.QRect(0, 100, 450, 300))
+        ui.pricePenny.setGeometry(QtCore.QRect(350, 120, 200, 200))
+        ui.priceCurrency.setGeometry(QtCore.QRect(350, 190, 200, 200))  
+
+    elif (price >= 100):   
+        ui.price.setGeometry(QtCore.QRect(0, 100, 400, 300))
+        ui.pricePenny.setGeometry(QtCore.QRect(380, 120, 200, 200))
+        ui.priceCurrency.setGeometry(QtCore.QRect(380, 190, 200, 200))      
+
+    try:
+        path = getImage(str(code))
+
+        ui.productImage.setStyleSheet(f"border-radius:15px; border-image: url({path}img/temp/temp_image.jpg) 0 0 0 0 stretch stretch;")   
+        ui.productImage.setGeometry(QtCore.QRect(530, 25, 470, 545))
+  
+    except Exception:
+        ui.productImage.setPixmap(QtGui.QPixmap(pathImg + "img/resources/noImage.jpg")) 
+
+# Get KM
+def getKM(km):
+
+    response = requests.get(km).json()   
+    #pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+    
+    responseKM = response["KM"]
+    km = str(responseKM["Id"])
+
+    return(km)
+
+# Get image product
+
+def getImage(code):
+
+    image  = 'http://' + ui.apiAddress + '/img?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code='
+    image += code + '&sticker=1'
+    
+    responseImage = requests.get(image)           
+    #pc_logging.writeResponseToLog(responseImage.url,response.elapsed.total_seconds())
+
+    file = open(pathImg + "img/temp/temp_image.jpg", "wb")
+    file.write(responseImage.content)
+    file.close()
+
+    return pathImg
+
+# Get Card Info
+
+def getCard(barcode):
+
+    card = 'http://' + ui.apiAddress + '/card?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&card='
+    card += barcode + '&source=1'
+
+    responseCard = requests.get(card).json()     
+    #pc_logging.writeResponseToLog(responseCard.url,response.elapsed.total_seconds())
+
+    bonus = responseCard["Bonus"]
+    cash = bonus / 100
+    penny = bonus % 100
+    
+    name = responseCard["Name"]
+    ui.nameCard.setText(name + ', на Вашому рахунку')
+    ui.bonus.setText(str("%.0f" % cash) + "." + str(penny))
+
+    ui.nameCard.setGeometry(QtCore.QRect(120, 180, 800, 60))
+    ui.bonus.setGeometry(QtCore.QRect(0, 210, 1024, 400))
+
+    ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/dCardBack_dark.jpg"))
+
+# Related products
+
+def related():
+
+    try:
+        hideForms()
+
+        font = QtGui.QFont()
+        font.setPointSize(21)
+        ui.name.setFont(font)
+        ui.name.setGeometry(QtCore.QRect(530, 470, 350, 100))
+        font.setPointSize(80)
+        font.setBold(True)
+        ui.price.setFont(font)   
+        ui.price.setGeometry(QtCore.QRect(760, 450, 300, 120))
+        font.setPointSize(25)
+        font.setBold(False)
+        ui.pricePenny.setFont(font)   
+        ui.pricePenny.setGeometry(QtCore.QRect(950, 390, 200, 200))
+        font.setPointSize(21)
+        ui.priceCurrency.setStyleSheet("color:rgb(255, 255, 255)")
+        ui.priceCurrency.setFont(font)
+        ui.priceCurrency.setGeometry(QtCore.QRect(945, 440, 200, 200))
+        ui.productImage.setGeometry(QtCore.QRect(529, 29, 470, 375))
+        ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/companionProdBcDark.png"))
+        ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1013, 20))
+        ui.barcodeCopy = ''
+        ui.progressBarWorker.stop()
+        ui.progressBarThread.start()
+    
+        code = str(ui.rels[ui.countRel-1])
+
+        art = 'http://' + ui.apiAddress + '/art?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + code +'&source=3'
+        km ='http://' + ui.apiAddress + '/category?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + code +'&source=3'
+
+        km = getKM(km)
+
+        response = requests.get(art).json() 
         #pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
 
-        responseMini1 = response.text.replace('{"Barcode":' ,'')
+        name = response["Name"]
+        price = response["Price"]
 
-        if (responseMini1[0] == '"'):
-
-            responseMini1NotNull = responseMini1[1:]
-            barcodeStr = responseMini1NotNull[0:responseMini1NotNull.index('",')]
-            responseMini2 = responseMini1NotNull.replace(barcodeStr + '","Id":','')
-
-        elif (responseMini1[0] != '"'):
-
-            barcodeStr = responseMini1[0:responseMini1.index(',')]
-            responseMini2 = responseMini1.replace(barcodeStr + ',"Id":','')
-
-        idStr = responseMini2[0:responseMini2.index(',')]
-        responseMini3 = responseMini2.replace(idStr + ',"Name":"','')
-        nameStr = responseMini3[0:responseMini3.index('","')]
-        responseMini4 = responseMini3.replace(nameStr + '","Price":','')
-        priceStr = responseMini4[0:responseMini4.index(',')]
-        responseMini5 = responseMini4.replace(priceStr + ',"PriceOld":','')
-        priceOldStr = responseMini5[0:responseMini5.index(",")]
-        responseMini6 = responseMini5.replace(priceOldStr + ',"Qty":','')
-        qtyStr = responseMini6[0:responseMini6.index('}')]
-
-        priceFloat = float(priceStr)
-        price = str("%.0f" % priceFloat)
-        penny = str("%.0f" % ((priceFloat%1) * 100) )
-
+        priceStr = str("%.0f" % price)
+        penny = str("%.0f" % ((price%1) * 100))
+        
         if (penny == "0"):
             penny = "00"
 
-        if (priceOldStr != "null"):
-            priceOldFloat = float(priceOldStr)
-            priceOld = str("%.0f" % priceOldFloat)
-            pennyOld = str("%.0f" % ((priceOldFloat%1) * 100) )
-
-            if (pennyOld == "0"):
-                pennyOld = "00"
-
-        ui.barcodeText.setText("Ш/К:")
-        ui.barcodeValue.setText(barcodeStr)
-        ui.amountText.setText("Кількість:")
-        ui.amountValue.setText(qtyStr)
-        ui.codeText.setText("Код:")
-        ui.keyKTValue.setText(km)
-        ui.keyKT.setText("Код КТ:")
-        ui.codeValue.setText(idStr)
-        ui.name.setText(nameStr)
-        ui.price.setText(price)
-        ui.pricePenny.setText(penny)
-        ui.priceCurrency.setText("грн")
-        
-        
-        if (priceOldStr != "null"):
-            ui.priceOld.setText(priceOld)
-            ui.priceOldPenny.setText(pennyOld)
-            ui.priceOldCurrency.setText("грн")
-            
-            if (priceOldFloat < 10):
-                ui.priceOld.setGeometry(QtCore.QRect(350, 30, 100, 100))
-                ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 200, 50))
-                ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 200, 150))
-
-            elif (priceOldFloat < 100):
-                ui.priceOld.setGeometry(QtCore.QRect(270, 30, 250, 100))
-                ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 200, 50))
-                ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 200, 150))
-
-            elif (priceOldFloat >= 100):
-                ui.priceOld.setGeometry(QtCore.QRect(180, 30, 250, 100))
-                ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 200, 50))
-                ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 200, 150))
-
-        ui.barcodeText.setGeometry(QtCore.QRect(35, 550, 80, 20))
-        ui.barcodeValue.setGeometry(QtCore.QRect(90, 550, 200, 20))
-        ui.amountText.setGeometry(QtCore.QRect(35, 525, 100, 20))
-        ui.amountValue.setGeometry(QtCore.QRect(140, 525, 80, 20))
-        ui.codeText.setGeometry(QtCore.QRect(400, 525, 80, 20))
-        ui.codeValue.setGeometry(QtCore.QRect(450, 525, 80, 20))
-        ui.keyKT.setGeometry(QtCore.QRect(400, 550, 80, 20))
-        ui.keyKTValue.setGeometry(QtCore.QRect(480, 550, 80, 20))
-        ui.name.setWordWrap(True)
-        ui.name.setGeometry(QtCore.QRect(40, 380, 450, 150))     
-        
-        if (priceFloat < 10):
-            ui.price.setGeometry(QtCore.QRect(0, 100, 450, 300))
-            ui.pricePenny.setGeometry(QtCore.QRect(300, 120, 200, 200))
-            ui.priceCurrency.setGeometry(QtCore.QRect(300, 190, 200, 200))
-        elif (priceFloat < 100):
-
-            ui.price.setGeometry(QtCore.QRect(0, 100, 450, 300))
-            ui.pricePenny.setGeometry(QtCore.QRect(350, 120, 200, 200))
-            ui.priceCurrency.setGeometry(QtCore.QRect(350, 190, 200, 200))  
-        elif (priceFloat >= 100):   
-
-            ui.price.setGeometry(QtCore.QRect(0, 100, 400, 300))
-            ui.pricePenny.setGeometry(QtCore.QRect(380, 120, 200, 200))
-            ui.priceCurrency.setGeometry(QtCore.QRect(380, 190, 200, 200))
-
-        # Get image product
+        font.setPointSize(21)
+        ui.nameRel.setFont(font)
+        ui.nameRel.setText(name)
+        ui.nameRel.setGeometry(QtCore.QRect(30, 450, 200, 100))
+        font.setPointSize(80)
+        font.setBold(True)
+        ui.priceRel.setFont(font)   
+        ui.priceRel.setText(priceStr)
+        ui.priceRel.setGeometry(QtCore.QRect(300, 450, 300, 120))
+        font.setPointSize(25)
+        font.setBold(False)
+        ui.pricePennyRel.setFont(font)   
+        ui.pricePennyRel.setText(penny)
+        ui.pricePennyRel.setGeometry(QtCore.QRect(450, 390, 200, 200))
+        font.setPointSize(21)
+        ui.priceCurrencyRel.setStyleSheet("color:rgb(255, 255, 255)")
+        ui.priceCurrencyRel.setFont(font)
+        ui.priceCurrencyRel.setText('грн')
+        ui.priceCurrencyRel.setGeometry(QtCore.QRect(455, 440, 200, 200))
+        font.setPointSize(21)
+        font.setBold(True)
+        ui.rel.setFont(font)
+        ui.rel.setText("КУПУЙ РАЗОМ")
+        ui.rel.setGeometry(QtCore.QRect(405, 385, 400, 100))
 
         try:
-            image  = 'http://' + ui.apiAddress + '/img?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code='
-            image += idStr + '&sticker=1'
+            path = getImage(code)
+
+            ui.productImageRel.setStyleSheet(f"border-radius:15px; border-image: url({path}img/temp/temp_image.jpg) 0 0 0 0 stretch stretch;")   
+            ui.productImageRel.setGeometry(QtCore.QRect(29, 29, 470, 375))
             
-            responseImage = requests.get(image)           
-
-            #pc_logging.writeResponseToLog(responseImage.url,response.elapsed.total_seconds())
-
-            file = open(pathImg + "img/temp/temp_image.jpg", "wb")
-            file.write(responseImage.content)
-            file.close()
-
-            ui.productImage.setStyleSheet(f"border-radius:15px; border-image: url({pathImg}img/temp/temp_image.jpg) 0 0 0 0 stretch stretch;")
-            
-            ui.productImage.setGeometry(QtCore.QRect(530, 25, 470, 545))
-                
         except Exception:
+            ui.productImage.setPixmap(QtGui.QPixmap(pathImg + "img/resources/noImage.jpg")) 
 
-            ui.productImage.setPixmap(QtGui.QPixmap(pathImg + "img/resources/noImage.jpg"))         
-          
+        ui.countRel -= 1
+
     except Exception:
-
-        # Check Card
-
-        try:
-            card = 'http://' + ui.apiAddress + '/card?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&card='
-            card += barcode + '&source=1'
-
-            responseCard = requests.get(card)          
-
-            #pc_logging.writeResponseToLog(responseCard.url,response.elapsed.total_seconds())
-
-            responseCard = responseCard.text
-
-            responseMini1Card = responseCard.replace('{"Bonus":' ,'')
-            bonusStr = responseMini1Card[0:responseMini1Card.index(',')]
-            responseMini2Card = responseMini1Card.replace(bonusStr + ',"Id":"' ,'')
-            idStr = responseMini2Card[0:responseMini2Card.index('",')]
-            responseMini3Card = responseMini2Card.replace(idStr + '","Name":"' ,'')
-            nameStrCard = responseMini3Card[0:responseMini3Card.index('"}')]
-
-            bonus = int(bonusStr)
-            cash = bonus / 100
-            penny = bonus % 100
-            
-            ui.nameCard.setText(nameStrCard + ', на Вашому рахунку')
-            ui.bonus.setText(str("%.0f" % cash) + "." + str(penny))
-
-            ui.nameCard.setGeometry(QtCore.QRect(120, 180, 800, 60))
-            ui.bonus.setGeometry(QtCore.QRect(0, 210, 1024, 400))
-
-            ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/dCardBack_dark.jpg"))          
-            
-        except Exception:
-
-            ui.barcodeText.setGeometry(QtCore.QRect(40, 550, 0, 0))
-            ui.barcodeValue.setGeometry(QtCore.QRect(80, 550, 0, 0))
-            ui.amountText.setGeometry(QtCore.QRect(290, 550, 0, 0))
-            ui.amountValue.setGeometry(QtCore.QRect(370, 550, 0, 0))
-            ui.codeText.setGeometry(QtCore.QRect(420, 550, 0, 0))
-            ui.codeValue.setGeometry(QtCore.QRect(460, 550, 0, 0))
-            ui.name.setGeometry(QtCore.QRect(80, 320, 0, 0))
-            ui.price.setGeometry(QtCore.QRect(250, 200, 0, 0))
-
-            ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/merchandiserError.png"))         
+        ui.countRel = 0
+    
+# Hide all
 
 def hideForms():
 
@@ -685,6 +793,12 @@ def hideForms():
     ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 0, 0))
     ui.keyKT.setGeometry(QtCore.QRect(430, 30, 0, 0))
     ui.keyKTValue.setGeometry(QtCore.QRect(430, 30, 0, 0))
+    ui.productImageRel.setGeometry(QtCore.QRect(0, 0, 0, 0))
+    ui.nameRel.setGeometry(QtCore.QRect(0, 0, 0, 0))
+    ui.priceRel.setGeometry(QtCore.QRect(0, 0, 0, 0))
+    ui.pricePenny.setGeometry(QtCore.QRect(0, 0, 0, 0))
+    ui.priceCurrency.setGeometry(QtCore.QRect(0, 0, 0, 0))
+    ui.rel.setGeometry(QtCore.QRect(0, 0, 0, 0))
 
 def checkPing():
 
@@ -749,7 +863,6 @@ def checkPing():
 def checkInput():
 
     length = len(ui.barcode.text()) - len(ui.barcodeCopy)
-    print(length)
 
     if (length > 12):
         barcodePressedEnter()
@@ -761,9 +874,10 @@ def checkInput():
 
 def checkProgressBar():
 
-    if (ui.progressBar.value() < 1):
+    if (ui.progressBar.value() < 1 and ui.countRel < 1):
         advertising()
-    
+    if (ui.progressBar.value() < 1 and ui.countRel > 0):
+        related()
 
 def advertising ():
     
@@ -794,14 +908,14 @@ def advertising ():
 def checkUpdate():
     time = datetime.now() 
     actualVersion = f"http://10.13.153.10/api/price/getVersion?version={ui.actualVersion}&ip={ui.ip}&stock={ui.apiStock}&device={ui.apiDevice}&numberBody={ui.apiNumberBody}&dateTime={time}"
-    print(actualVersion)
+
     responseActualVersion = requests.get(actualVersion)  
     '''
     if (responseActualVersion.text != "5.0.0"):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(('8.8.8.8', 80))
         ip = s.getsockname()[0]
-        print(ip)
+
         changeFiles = "http://10.13.153.10/api/price/getFiles?ip=" + ip
         requests.get(changeFiles)  
     '''
@@ -840,13 +954,16 @@ ui.statusEthernet = True
 ui.statusConfig = 0
 ui.countAdvertising = 0
 ui.secondAdvertising = 1
+ui.barcodeCopy = ''
+ui.countRel = 0
+ui.rels = []
+ui.source = 0
+
 ui.apiKey="39fa302c1a6b40e19020b376c9becb3b"
 ui.apiStock="235"
 ui.apiDevice="DeviceName"
 ui.apiNumberBody="0000"
 ui.actualVersion="1.0.0.0"
-ui.barcodeCopy = ''
-ui.source = 0
 
 #pc_logging.createLogs()
 #pc_logging.writeInfo('Starting')

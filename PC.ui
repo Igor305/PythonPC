@@ -544,6 +544,9 @@ selection-background-color: green;</string>
     <property name="text">
      <string/>
     </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
+    </property>
    </widget>
    <widget class="QLabel" name="priceOldPenny">
     <property name="geometry">

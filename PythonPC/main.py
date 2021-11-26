@@ -388,7 +388,7 @@ def barcodePressedEnter():
             
             if (name == None):
                 raise Exception('name == None') 
-                
+
             ui.nameEmp.setWordWrap(True)
             ui.nameEmp.setText(name)
 
@@ -455,7 +455,7 @@ def barcodePressedEnter():
             ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/productBack_dark.jpg"))
             art = 'http://' + ui.apiAddress + '/art?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode + '&source=' + str(ui.source)
             km ='http://' + ui.apiAddress + '/category?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode + '&source=' + str(ui.source)
-            rel = 'http://' + ui.apiAddress + '/rel?key='+ ui.apiKey + '&stock=236&device=' + ui.apiDevice + '&code=' + barcode + '&source=' + str(ui.source)
+            rel = 'http://' + ui.apiAddress + '/rel?key='+ ui.apiKey + '&stock' + ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode + '&source=' + str(ui.source)
             getProductInfo(art, km, rel, barcode)
 
 # Info For product 
@@ -488,11 +488,6 @@ def getProduct(art,km):
  
     ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1017, 20))
 
-    try:
-        km = getKM(km)
-    except:
-        print(km)
-
     response = requests.get(art)
     pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
     response = response.json()
@@ -519,6 +514,11 @@ def getProduct(art,km):
 
         if (pennyOld == "0"):
             pennyOld = "00"
+        
+    try:
+        km = getKM(km)
+    except:
+        print(km)
 
     ui.barcodeText.setText("Ш/К:")
     ui.barcodeValue.setText(str(barcode))
@@ -532,10 +532,13 @@ def getProduct(art,km):
     ui.priceCurrency.setText("грн")
 
     if (priceOld != None):
-        ui.priceOld.setText(priceOldStr)
+        ui.priceOld.setText('454')
         ui.priceOldPenny.setText(pennyOld)
         ui.priceOldCurrency.setText("грн")
-        
+        ui.priceOld.setGeometry(QtCore.QRect(130, 10, 300, 130))
+        ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 200, 50))
+        ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 200, 150))
+        '''
         if (priceOld < 10):
             ui.priceOld.setGeometry(QtCore.QRect(350, 30, 100, 100))
             ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 200, 50))
@@ -550,7 +553,7 @@ def getProduct(art,km):
             ui.priceOld.setGeometry(QtCore.QRect(180, 30, 250, 100))
             ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 200, 50))
             ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 200, 150))
-  
+        '''
     ui.barcodeText.setGeometry(QtCore.QRect(35, 550, 80, 20))
     ui.barcodeValue.setGeometry(QtCore.QRect(90, 550, 200, 20))
     ui.amountText.setGeometry(QtCore.QRect(35, 525, 100, 20))

@@ -242,6 +242,7 @@ class Ui_MainWindow(object):
         self.priceOld.setFont(font)
         self.priceOld.setStyleSheet("color:rgb(255, 255, 255)")
         self.priceOld.setText("")
+        self.priceOld.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTop|QtCore.Qt.AlignTrailing)
         self.priceOld.setObjectName("priceOld")
         self.priceOldPenny = QtWidgets.QLabel(self.centralwidget)
         self.priceOldPenny.setGeometry(QtCore.QRect(390, 30, 0, 0))

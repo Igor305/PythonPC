@@ -67,7 +67,7 @@ font: 55pt &quot;MS Shell Dlg 2&quot;;</string>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">color: green;
+     <string notr="true">background-color: transparent;
 selection-background-color: green;</string>
     </property>
     <property name="textVisible">
@@ -398,27 +398,6 @@ selection-background-color: green;</string>
      <string/>
     </property>
    </widget>
-   <widget class="QLabel" name="codeText">
-    <property name="geometry">
-     <rect>
-      <x>380</x>
-      <y>530</y>
-      <width>0</width>
-      <height>0</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>15</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">color:rgb(193, 193, 193)</string>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
    <widget class="QLabel" name="codeValue">
     <property name="geometry">
      <rect>
@@ -440,7 +419,7 @@ selection-background-color: green;</string>
      <string/>
     </property>
     <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
     </property>
    </widget>
    <widget class="QLabel" name="name">
@@ -496,7 +475,7 @@ selection-background-color: green;</string>
      <string/>
     </property>
     <property name="alignment">
-     <set>Qt::AlignCenter</set>
+     <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
     </property>
    </widget>
    <widget class="QLabel" name="pricePenny">
@@ -839,27 +818,6 @@ border-radius: 30px;
      <string/>
     </property>
    </widget>
-   <widget class="QLabel" name="keyKT">
-    <property name="geometry">
-     <rect>
-      <x>400</x>
-      <y>550</y>
-      <width>0</width>
-      <height>0</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <pointsize>15</pointsize>
-     </font>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">color:rgb(193, 193, 193)</string>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-   </widget>
    <widget class="QLabel" name="keyKTValue">
     <property name="geometry">
      <rect>
@@ -880,6 +838,9 @@ border-radius: 30px;
     <property name="text">
      <string/>
     </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
+    </property>
    </widget>
    <widget class="QLabel" name="nameRel">
     <property name="geometry">
@@ -896,6 +857,9 @@ border-radius: 30px;
     <property name="text">
      <string/>
     </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+    </property>
    </widget>
    <widget class="QLabel" name="priceRel">
     <property name="geometry">
@@ -911,6 +875,9 @@ border-radius: 30px;
     </property>
     <property name="text">
      <string/>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTop|Qt::AlignTrailing</set>
     </property>
    </widget>
    <widget class="QLabel" name="pricePennyRel">
@@ -974,6 +941,48 @@ border-radius: 30px;
      <string/>
     </property>
    </widget>
+   <zorder>image</zorder>
+   <zorder>barcode</zorder>
+   <zorder>deviceName</zorder>
+   <zorder>ipAddress</zorder>
+   <zorder>ipAddressStatic</zorder>
+   <zorder>version</zorder>
+   <zorder>numberOS</zorder>
+   <zorder>temperatureCPU</zorder>
+   <zorder>serial</zorder>
+   <zorder>temperatureOut</zorder>
+   <zorder>humidity</zorder>
+   <zorder>numberBody</zorder>
+   <zorder>barcodeText</zorder>
+   <zorder>barcodeValue</zorder>
+   <zorder>amountText</zorder>
+   <zorder>amountValue</zorder>
+   <zorder>codeValue</zorder>
+   <zorder>name</zorder>
+   <zorder>price</zorder>
+   <zorder>pricePenny</zorder>
+   <zorder>priceCurrency</zorder>
+   <zorder>priceOld</zorder>
+   <zorder>priceOldPenny</zorder>
+   <zorder>priceOldCurrency</zorder>
+   <zorder>nameCard</zorder>
+   <zorder>bonus</zorder>
+   <zorder>nameEmp</zorder>
+   <zorder>statusEmp</zorder>
+   <zorder>timeEmp</zorder>
+   <zorder>productImage</zorder>
+   <zorder>configTitle</zorder>
+   <zorder>configText</zorder>
+   <zorder>configValue</zorder>
+   <zorder>statusProgressBar</zorder>
+   <zorder>keyKTValue</zorder>
+   <zorder>nameRel</zorder>
+   <zorder>priceRel</zorder>
+   <zorder>pricePennyRel</zorder>
+   <zorder>priceCurrencyRel</zorder>
+   <zorder>productImageRel</zorder>
+   <zorder>rel</zorder>
+   <zorder>progressBar</zorder>
   </widget>
  </widget>
  <resources/>

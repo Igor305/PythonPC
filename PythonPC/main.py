@@ -1,3 +1,4 @@
+from logging import captureWarnings
 import pc_logging
 import sensorDHT
 
@@ -95,7 +96,7 @@ def getInfo():
         if "static ip_address=" in s:
             ui.ipAddressStatic.setText("Стат. IP-адрес: " + s[19:-4])
 
-    ui.version.setText(ui.actualVersion)
+    ui.version.setText("Версия: " + ui.actualVersion)
 
     numberOS = open("/etc/os-release","r")
     for s in numberOS:
@@ -188,21 +189,17 @@ def barcodeReset():
 
 # When barcode textChanged
 
-def sync_lineEdit():
+def sync_lineEdit(barcode):
     ui.countRel = 0
-    ui.progressBar.setValue(100)
-    ui.progressBarThread.start()  
+    ui.progressBarWorker.stop()
+    ui.progressBarThread.start() 
 
-    barcode = ui.barcode.text() 
-
-    if(ui.progressBarThread.isRunning()):
-        ui.progressBarWorker.stop()
     hideForms() 
 
     if(barcode == ""):   
 
         advertising()
-        ui.progressBarWorker.stop()
+        #ui.progressBarWorker.stop()
 
     if(barcode != ""):
 
@@ -213,6 +210,17 @@ def sync_lineEdit():
 # When Press Enter
 
 def barcodePressedEnter():
+    
+    if (ui.barcode.text() != ""):
+        hideForms()
+
+    if (ui.isLineEdit):
+        ui.source = 1  
+    if (ui.isLineEdit == False):
+        ui.source = 2
+
+    ui.isLineEdit = False
+
     ui.countRel = 0
     ui.barcodeCopy = ''
     ui.progressBarWorker.stop()
@@ -485,7 +493,7 @@ def getProductInfo(art, km, rel, barcode):
 # Get info product  
 
 def getProduct(art,km):
- 
+    
     ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1017, 20))
 
     response = requests.get(art)
@@ -538,22 +546,6 @@ def getProduct(art,km):
         ui.priceOld.setGeometry(QtCore.QRect(130, 10, 300, 130))
         ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 200, 50))
         ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 200, 150))
-        '''
-        if (priceOld < 10):
-            ui.priceOld.setGeometry(QtCore.QRect(350, 30, 100, 100))
-            ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 200, 50))
-            ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 200, 150))
-
-        elif (priceOld < 100):
-            ui.priceOld.setGeometry(QtCore.QRect(270, 30, 250, 100))
-            ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 200, 50))
-            ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 200, 150))
-
-        elif (priceOld >= 100):
-            ui.priceOld.setGeometry(QtCore.QRect(180, 30, 250, 100))
-            ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 200, 50))
-            ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 200, 150))
-        '''
     ui.barcodeText.setGeometry(QtCore.QRect(35, 550, 80, 20))
     ui.barcodeValue.setGeometry(QtCore.QRect(90, 550, 200, 20))
     ui.amountText.setGeometry(QtCore.QRect(35, 525, 100, 20))
@@ -839,22 +831,21 @@ def checkPing():
             pc_logging.writeError("Servers connection error")
 
 def checkInput():
+    barcode = ui.barcode.text()
+    length = len(barcode) - len(ui.barcodeCopy)
 
-    ui.length = len(ui.barcode.text()) - len(ui.barcodeCopy)
-    
-    if (ui.length > 10 and ui.length != 0):
-        ui.source = 2
-        barcodePressedEnter()
+    if (length == 0):    
+        return
 
-    if (ui.length <= 10 and ui.length > 0):
-        ui.source = 1
-        sync_lineEdit()
+    if (length <= 10 and length > 0):
+        ui.isLineEdit = True
+        sync_lineEdit(barcode)
     
-    ui.barcodeCopy = ui.barcode.text()
+    ui.barcodeCopy = barcode
 
 def checkProgressBar():
 
-    if (ui.progressBar.value() < 1 and ui.countRel < 1):
+    if (ui.progressBar.value() < 1 and ui.countRel < 1 and  ui.isLineEdit == False):
         advertising()
     if (ui.progressBar.value() < 1 and ui.countRel > 0):
         related()
@@ -885,11 +876,24 @@ def advertising ():
         except:
             ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/default_dark.jpg"))
 
-def checkUpdate():
-    time = datetime.now() 
-    actualVersion = f"http://10.13.153.10/api/price/getVersion?version={ui.actualVersion}&ip={ui.ip}&stock={ui.apiStock}&device={ui.apiDevice}&numberBody={ui.apiNumberBody}&dateTime={time}"
+def backspace():
 
-    responseActualVersion = requests.get(actualVersion)  
+    length = len(ui.barcode.text()) - len(ui.barcodeCopy)
+
+    if (length < 0):
+        ui.progressBarWorker.stop()
+
+    if (ui.barcode.text() == ""):
+        advertising()
+
+def checkUpdate():
+    try:
+        time = datetime.now() 
+        actualVersion = f"http://10.13.153.10/api/price/getVersion?version={ui.actualVersion}&ip={ui.ip}&stock={ui.apiStock}&device={ui.apiDevice}&numberBody={ui.apiNumberBody}&dateTime={time}"
+
+        requests.get(actualVersion)  
+    except:
+        print('error actualVersion')
     '''
     if (responseActualVersion.text != "5.0.0"):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -929,7 +933,7 @@ def timerCheckUpdate():
     ui.timerCheckUpdate = QtCore.QTimer()
     ui.timerCheckUpdate.timeout.connect(checkUpdate)
     ui.timerCheckUpdate.start(3600000)
-
+    
 ui.statusEthernet = True
 ui.statusConfig = 0
 ui.countAdvertising = 0
@@ -937,6 +941,7 @@ ui.secondAdvertising = 1
 ui.barcodeCopy = ''
 ui.countRel = 0
 ui.rels = []
+ui.isLineEdit = False
 ui.source = 0
 
 ui.apiKey="39fa302c1a6b40e19020b376c9becb3b"
@@ -954,9 +959,8 @@ timerCheckPing()
 timerTemperatureAndHumidity()
 timerCheckUpdate()
 MainWindow.showMaximized()
-ui.barcode.text()
-
 ui.barcode.returnPressed.connect(barcodePressedEnter)
+ui.barcode.textEdited.connect(backspace)
 ui.progressBarWorker = ProgressBarWorker()
 ui.progressBarThread = QThread()
 ui.progressBarWorker.moveToThread(ui.progressBarThread)       

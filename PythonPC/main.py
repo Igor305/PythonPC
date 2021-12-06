@@ -6,7 +6,7 @@ from genericpath import exists
 from PyQt5 import QtCore, QtGui, QtWidgets
 from adafruit_platformdetect import board
 from interface import Ui_MainWindow
-from PyQt5.QtCore import QLine, QLineF, QThread, pyqtSignal
+from PyQt5.QtCore import QLine, QLineF, QThread, Qt, pyqtSignal
 from datetime import date, datetime
 from ping3 import ping
 
@@ -463,7 +463,7 @@ def barcodePressedEnter():
             ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/productBack_dark.jpg"))
             art = 'http://' + ui.apiAddress + '/artex?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode + '&source=' + str(ui.source)
             km ='http://' + ui.apiAddress + '/category?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode + '&source=' + str(ui.source)
-            rel = 'http://' + ui.apiAddress + '/rel?key='+ ui.apiKey + '&stock' + ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode + '&source=' + str(ui.source)
+            rel = 'http://' + ui.apiAddress + '/rel?key='+ ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode + '&source=' + str(ui.source)
             getProductInfo(art, km, rel, barcode)
 
 # Info For product 
@@ -471,14 +471,14 @@ def barcodePressedEnter():
 def getProductInfo(art, km, rel, barcode):
     
         # Get related products
-       # try:
+        try:
             response = requests.get(rel).json()
             if(len(response) > 0):
                 ui.countRel = len(response)
                 ui.rels = response
             
             getProduct(art,km)
-            '''
+             
         except Exception:  
 
             try:
@@ -489,7 +489,7 @@ def getProductInfo(art, km, rel, barcode):
                 hideForms()
                 ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/merchandiserError.png")) 
                 ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1017, 20))
-            '''
+               
 # Get info product  
 
 def getProduct(art,km):
@@ -509,13 +509,6 @@ def getProduct(art,km):
     bonusDateTo = response["BonusDateTo"]
     qty = int(response["Qty"])
 
-    ui.peneee = QLine()
-    ui.peneee.setLine(32,23,220,250)
-    print(ui.peneee.isNull())
-    print(priceOldBonus)
-    print(bonusDateFrom)
-    print(bonusDateTo)
-
     if (name == None):
         raise Exception('name == None')
 
@@ -525,19 +518,12 @@ def getProduct(art,km):
     if (code != None) : strCode = str(code)    
     if (qty != None) : strQty= str(qty)    
 
-    priceStr = str("%.0f" % price)
+    priceStr = str("%.0f" % int(price))
     penny = str("%.0f" % ((price%1) * 100))
     
     if (penny == "0"):
         penny = "00"
     
-    if (priceOld != None):
-        priceOldStr = str("%.0f" % priceOld)
-        pennyOld = str("%.0f" % ((priceOld%1) * 100) )
-
-        if (pennyOld == "0"):
-            pennyOld = "00"
-        
     try:
         km = getKM(km)
         if (km != None): strKm = str(km)
@@ -554,14 +540,6 @@ def getProduct(art,km):
     ui.price.setText(priceStr)
     ui.pricePenny.setText(penny)
     ui.priceCurrency.setText("грн")
-
-    if (priceOld != None):
-        ui.priceOld.setText(priceOldStr)
-        ui.priceOldPenny.setText(pennyOld)
-        ui.priceOldCurrency.setText("грн")
-        ui.priceOld.setGeometry(QtCore.QRect(130, 10, 300, 130))
-        ui.priceOldPenny.setGeometry(QtCore.QRect(440, 30, 200, 50))
-        ui.priceOldCurrency.setGeometry(QtCore.QRect(430, 30, 200, 150))
     ui.barcodeText.setGeometry(QtCore.QRect(35, 550, 80, 20))
     ui.barcodeValue.setGeometry(QtCore.QRect(90, 550, 200, 20))
     ui.amountText.setGeometry(QtCore.QRect(35, 525, 100, 20))
@@ -574,22 +552,55 @@ def getProduct(art,km):
     font.setWeight(50)
     ui.name.setFont(font)
     ui.name.setWordWrap(True)
-    ui.name.setGeometry(QtCore.QRect(40, 380, 450, 120)) 
-    font.setPointSize(140)
+    ui.name.setGeometry(QtCore.QRect(30, 380, 450, 120)) 
+    font.setPointSize(130)
     font.setBold(True)
-    font.setWeight(75)
+    font.setWeight(65)
     ui.price.setFont(font)  
-    font.setPointSize(65)
+    font.setPointSize(45)
     font.setBold(True)
     font.setWeight(75)
     ui.pricePenny.setFont(font) 
-    font.setPointSize(55)
+    font.setPointSize(45)
     ui.priceCurrency.setFont(font) 
     ui.priceCurrency.setStyleSheet("color: rgb(255, 238, 0);")
 
-    ui.price.setGeometry(QtCore.QRect(0, 140, 370, 300))
-    ui.pricePenny.setGeometry(QtCore.QRect(370, 110, 200, 200))
-    ui.priceCurrency.setGeometry(QtCore.QRect(370, 190, 200, 200))
+    ui.price.setGeometry(QtCore.QRect(0, 120, 370, 300))
+    ui.pricePenny.setGeometry(QtCore.QRect(380, 100, 200, 150))
+    ui.priceCurrency.setGeometry(QtCore.QRect(380, 180, 200, 150))
+
+    if (priceOldBonus > 0.0 and priceOldBonus != None):
+
+        priceOldStr = str("%.0f" % int(priceOldBonus))
+        pennyOld = str("%.0f" % ((priceOldBonus%1) * 100))
+
+        if (pennyOld == "0"):
+            pennyOld = "00"
+
+        if (bonusDateFrom != None):
+            dateFrom = datetime.strptime(bonusDateFrom, '%Y-%m-%d %H:%M:%S')
+            bonusDateFrom = dateFrom.strftime("%d.%m")
+
+        if (bonusDateTo != None):
+            dateTo = datetime.strptime(bonusDateTo, '%Y-%m-%d %H:%M:%S')
+            bonusDateTo = dateTo.strftime("%d.%m")
+
+        if (bonusDateFrom == None and bonusDateTo == None) : ui.stockFromTo.setText("")
+        elif (bonusDateFrom != None and bonusDateTo == None) : ui.stockFromTo.setText(f"з {bonusDateFrom}")
+        elif (bonusDateFrom == None and bonusDateTo != None) : ui.stockFromTo.setText(f"по {bonusDateTo}")
+        else : ui.stockFromTo.setText(f"з {bonusDateFrom} по {bonusDateTo}")
+
+        formBonus(priceOldStr,pennyOld)
+            
+    elif (priceOld > 0.0 and priceOld != None):
+
+        priceOldStr = str("%.0f" % int(priceOld))
+        pennyOld = str("%.0f" % ((priceOld%1) * 100))
+
+        if (pennyOld == "0"):
+            pennyOld = "00"
+
+        formBonus(priceOldStr,pennyOld)
 
     try:
         path = getImage(str(code))
@@ -599,6 +610,45 @@ def getProduct(art,km):
   
     except Exception:
         ui.productImage.setPixmap(QtGui.QPixmap(pathImg + "img/resources/noImage.jpg")) 
+
+def formBonus(priceOldStr,pennyOld):
+
+    ui.stockName.setText("АКЦІЯ")
+    font = QtGui.QFont()
+    font.setBold(True)
+    font.setPointSize(45)
+    ui.stockName.setFont(font)
+    ui.stockName.setGeometry(QtCore.QRect(20, 20, 300, 80))
+    font.setBold(True)
+    font.setPointSize(18)
+    ui.stockFromTo.setFont(font)
+    ui.stockFromTo.setGeometry(QtCore.QRect(20, 80, 300, 70))
+    ui.priceOld.setText(priceOldStr)
+    font.setBold(True)
+    font.setPointSize(65)
+    ui.priceOld.setFont(font)
+    ui.priceOld.setGeometry(QtCore.QRect(150, 30, 300, 100))
+    ui.priceOldPenny.setText(pennyOld)
+    font.setPointSize(28)
+    ui.priceOldPenny.setFont(font)
+    ui.priceOldPenny.setGeometry(QtCore.QRect(450, 30, 200, 60))
+    ui.priceOldCurrency.setText("грн")
+    font.setPointSize(28)
+    ui.priceOldCurrency.setFont(font)
+    ui.priceOldCurrency.setGeometry(QtCore.QRect(450, 30, 200, 140))
+    font.setPointSize(120)
+    font.setBold(True)
+    font.setWeight(65)
+    ui.price.setFont(font)  
+    ui.price.setGeometry(QtCore.QRect(0, 170, 370, 300))
+    font.setPointSize(45)
+    font.setBold(True)
+    font.setWeight(75)
+    ui.pricePenny.setFont(font) 
+    ui.pricePenny.setGeometry(QtCore.QRect(370, 150, 200, 150))
+    font.setPointSize(45)
+    ui.priceCurrency.setFont(font) 
+    ui.priceCurrency.setGeometry(QtCore.QRect(370, 225, 200, 150))
 
 # Get KM
 def getKM(km):
@@ -785,6 +835,8 @@ def hideForms():
     ui.pricePennyRel.setGeometry(QtCore.QRect(0, 0, 0, 0))
     ui.priceCurrencyRel.setGeometry(QtCore.QRect(0, 0, 0, 0))
     ui.rel.setGeometry(QtCore.QRect(0, 0, 0, 0))
+    ui.stockName.setGeometry(QtCore.QRect(0, 0, 0 ,0))
+    ui.stockFromTo.setGeometry(QtCore.QRect(0, 0, 0 ,0))
 
 def checkPing():
 

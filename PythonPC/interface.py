@@ -201,7 +201,7 @@ class Ui_MainWindow(object):
         self.name.setStyleSheet("color:rgb(255, 255, 255)")
         self.name.setText("")
         self.name.setTextFormat(QtCore.Qt.AutoText)
-        self.name.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignTop)
+        self.name.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.name.setObjectName("name")
         self.price = QtWidgets.QLabel(self.centralwidget)
         self.price.setGeometry(QtCore.QRect(250, 200, 0, 0))
@@ -391,6 +391,16 @@ class Ui_MainWindow(object):
         self.rel.setStyleSheet("color:rgb(255,140,0)")
         self.rel.setText("")
         self.rel.setObjectName("rel")
+        self.stockName = QtWidgets.QLabel(self.centralwidget)
+        self.stockName.setGeometry(QtCore.QRect(40, 40, 0, 0))
+        self.stockName.setStyleSheet("color:rgb(255, 255, 255)")
+        self.stockName.setText("")
+        self.stockName.setObjectName("stockName")
+        self.stockFromTo = QtWidgets.QLabel(self.centralwidget)
+        self.stockFromTo.setGeometry(QtCore.QRect(30, 60, 0, 0))
+        self.stockFromTo.setStyleSheet("color:rgb(255, 255, 255)")
+        self.stockFromTo.setText("")
+        self.stockFromTo.setObjectName("stockFromTo")
         self.image.raise_()
         self.barcode.raise_()
         self.deviceName.raise_()
@@ -433,6 +443,8 @@ class Ui_MainWindow(object):
         self.productImageRel.raise_()
         self.rel.raise_()
         self.progressBar.raise_()
+        self.stockName.raise_()
+        self.stockFromTo.raise_()
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
@@ -441,7 +453,6 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "PriceChecker"))
-
 
 if __name__ == "__main__":
     import sys

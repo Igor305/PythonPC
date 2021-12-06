@@ -448,7 +448,7 @@ selection-background-color: green;</string>
      <enum>Qt::AutoText</enum>
     </property>
     <property name="alignment">
-     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
     </property>
    </widget>
    <widget class="QLabel" name="price">
@@ -944,6 +944,38 @@ border-radius: 30px;
      <string/>
     </property>
    </widget>
+   <widget class="QLabel" name="stockName">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>40</y>
+      <width>0</width>
+      <height>0</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color:rgb(255, 255, 255)</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="stockFromTo">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>60</y>
+      <width>0</width>
+      <height>0</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color:rgb(255, 255, 255)</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
    <zorder>image</zorder>
    <zorder>barcode</zorder>
    <zorder>deviceName</zorder>
@@ -986,6 +1018,8 @@ border-radius: 30px;
    <zorder>productImageRel</zorder>
    <zorder>rel</zorder>
    <zorder>progressBar</zorder>
+   <zorder>stockName</zorder>
+   <zorder>stockFromTo</zorder>
   </widget>
  </widget>
  <resources/>

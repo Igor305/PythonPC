@@ -15,7 +15,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1024, 600)
-        MainWindow.setWindowFlags(QtCore.Qt.CustomizeWindowHint) 
+        MainWindow.setWindowFlags(QtCore.Qt.CustomizeWindowHint)
         MainWindow.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("PythonPC/img/resources/Logo.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -401,6 +401,16 @@ class Ui_MainWindow(object):
         self.stockFromTo.setStyleSheet("color:rgb(255, 255, 255)")
         self.stockFromTo.setText("")
         self.stockFromTo.setObjectName("stockFromTo")
+        self.lineRed = QtWidgets.QLabel(self.centralwidget)
+        self.lineRed.setGeometry(QtCore.QRect(160, 30, 0, 0))
+        self.lineRed.setText("")
+        self.lineRed.setPixmap(QtGui.QPixmap("PythonPC/img/resources/lineRed.svg"))
+        self.lineRed.setObjectName("lineRed")
+        self.lineWhite = QtWidgets.QLabel(self.centralwidget)
+        self.lineWhite.setGeometry(QtCore.QRect(430, 80, 0, 0))
+        self.lineWhite.setText("")
+        self.lineWhite.setPixmap(QtGui.QPixmap("PythonPC/img/resources/lineWhite.svg"))
+        self.lineWhite.setObjectName("lineWhite")
         self.image.raise_()
         self.barcode.raise_()
         self.deviceName.raise_()
@@ -445,6 +455,8 @@ class Ui_MainWindow(object):
         self.progressBar.raise_()
         self.stockName.raise_()
         self.stockFromTo.raise_()
+        self.lineRed.raise_()
+        self.lineWhite.raise_()
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
@@ -453,6 +465,7 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "PriceChecker"))
+
 
 if __name__ == "__main__":
     import sys

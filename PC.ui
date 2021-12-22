@@ -976,6 +976,38 @@ border-radius: 30px;
      <string/>
     </property>
    </widget>
+   <widget class="QLabel" name="lineRed">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>30</y>
+      <width>0</width>
+      <height>0</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>PythonPC/img/resources/lineRed.svg</pixmap>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lineWhite">
+    <property name="geometry">
+     <rect>
+      <x>430</x>
+      <y>80</y>
+      <width>0</width>
+      <height>0</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>PythonPC/img/resources/lineWhite.svg</pixmap>
+    </property>
+   </widget>
    <zorder>image</zorder>
    <zorder>barcode</zorder>
    <zorder>deviceName</zorder>
@@ -1020,6 +1052,8 @@ border-radius: 30px;
    <zorder>progressBar</zorder>
    <zorder>stockName</zorder>
    <zorder>stockFromTo</zorder>
+   <zorder>lineRed</zorder>
+   <zorder>lineWhite</zorder>
   </widget>
  </widget>
  <resources/>

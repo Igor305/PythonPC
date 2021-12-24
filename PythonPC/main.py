@@ -921,17 +921,16 @@ def checkPing():
             pc_logging.writeError("Servers connection error")
 
 def checkInput():
-    barcode = ui.barcode.text()
-    length = len(barcode) - len(ui.barcodeCopy)
 
+    length = len(ui.barcode.text()) - len(ui.barcodeCopy)
+    ui.barcodeCopy = ui.barcode.text()
+    print(ui.barcodeCopy)
     if (length == 0):
         return
 
     if (length <= 10 and length > 0):
         ui.isLineEdit = True
-        sync_lineEdit(barcode)
-
-    ui.barcodeCopy = barcode
+        sync_lineEdit(ui.barcode.text())
 
 def checkProgressBar():
 
@@ -1051,7 +1050,7 @@ def timerCheckInput():
 
     ui.timerCheckInput = QtCore.QTimer()
     ui.timerCheckInput.timeout.connect(checkInput)
-    ui.timerCheckInput.start(500)
+    ui.timerCheckInput.start(200)
 
 def timerCheckProgressBar():
 

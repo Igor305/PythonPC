@@ -6,8 +6,8 @@ from genericpath import exists
 from PyQt5 import QtCore, QtGui, QtWidgets
 from adafruit_platformdetect import board
 from interface import Ui_MainWindow
-from PyQt5.QtCore import QLine, QLineF, QThread, Qt, pyqtSignal
-from datetime import date, datetime
+from PyQt5.QtCore import QThread, pyqtSignal
+from datetime import datetime
 from ping3 import ping
 
 import requests
@@ -42,14 +42,13 @@ class ProgressBarWorker(QThread):
 
     def run(ui):
         while True:
-
             if (ui.isStop == True):
                 ui.isStop = False
                 ui.progress = 103
                 ui.run()
 
             if (ui.progress == 0):
-                ui.wait()
+                ui.progress = 103
 
             if (ui.progress > 0):
                 time.sleep(0.08)
@@ -107,8 +106,8 @@ def getInfo():
     temperatureCPU = str(round(float(temperatureCPU.read())/1000))
     ui.temperatureCPU.setText("Температура CPU: " + temperatureCPU)
 
-    serial = open("/proc/cpuinfo", "r")
-    for s in serial:
+    serialNumbers = open("/proc/cpuinfo", "r")
+    for s in serialNumbers:
         if "Serial" in s:
             ui.serial.setText("Serial: " + s[10:])
 
@@ -197,22 +196,16 @@ def barcodeReset():
 
 # When barcode textChanged
 
-def sync_lineEdit(barcode):
+def sync_lineEdit():
     ui.countRel = 0
     ui.progressBarWorker.stop()
     ui.progressBarThread.start()
 
     hideForms()
 
-    if(barcode == "" and ui.statusConfig <= 0):
-
-        advertising()
-
-    if(barcode != ""):
-
-        ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/manualInputBc_dark.png"))
-        ui.barcode.setGeometry(QtCore.QRect(40, 245, 800, 70))
-        ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1017, 20))
+    ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/manualInputBc_dark.png"))
+    ui.barcode.setGeometry(QtCore.QRect(40, 245, 800, 70))
+    ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1017, 20))
 
 # When Press Enter
 
@@ -418,7 +411,7 @@ def barcodePressedEnter():
             ui.timeEmp.setText("час зафіксовано о " + current_time)
 
             ui.nameEmp.setGeometry(QtCore.QRect(0, 150, 1024, 200))
-            #ui.statusEmp.setGeometry(QtCore.QRect(0, 310, 1024, 200))
+            ##ui.statusEmp.setGeometry(QtCore.QRect(0, 310, 1024, 200))
             ui.timeEmp.setGeometry(QtCore.QRect(0, 380, 1024, 200))
 
         except Exception:
@@ -924,13 +917,10 @@ def checkInput():
 
     length = len(ui.barcode.text()) - len(ui.barcodeCopy)
     ui.barcodeCopy = ui.barcode.text()
-    print(ui.barcodeCopy)
-    if (length == 0):
-        return
 
-    if (length <= 10 and length > 0):
+    if (length <= 4 and length > 0):
         ui.isLineEdit = True
-        sync_lineEdit(ui.barcode.text())
+        sync_lineEdit()
 
 def checkProgressBar():
 
@@ -1095,12 +1085,14 @@ ui.actualVersion="1.0.0.0"
 
 pc_logging.createLogs()
 pc_logging.writeInfo('Starting')
+
 getInfo()
 timerCheckInput()
 timerCheckProgressBar()
 timerCheckPing()
 timerTemperatureAndHumidity()
 timerCheckUpdate()
+
 MainWindow.showMaximized()
 ui.barcode.returnPressed.connect(barcodePressedEnter)
 ui.barcode.textEdited.connect(backspace)
@@ -1109,6 +1101,7 @@ ui.progressBarThread = QThread()
 ui.progressBarWorker.moveToThread(ui.progressBarThread)
 ui.progressBarWorker.change_value.connect(ui.progressBar.setValue)
 ui.progressBarThread.started.connect(ui.progressBarWorker.run)
+ui.time = time.time()
 
 # Run
 sys.exit(app.exec_())

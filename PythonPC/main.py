@@ -48,9 +48,12 @@ class ProgressBarWorker(QThread):
                 ui.run()
 
             if (ui.progress == 0):
-                ui.progress = 103
+                ui.progress = 105
 
-            if (ui.progress > 0):
+            if (ui.progress == 105):
+                ui.progress = 105
+
+            if (ui.progress > 0 and ui.progress < 105):
                 time.sleep(0.08)
                 ui.progress -= 1
                 ui.change_value.emit(ui.progress)
@@ -1059,7 +1062,7 @@ def timerTemperatureAndHumidity():
 
     ui.timerTemperatureAndHumidity = QtCore.QTimer()
     ui.timerTemperatureAndHumidity.timeout.connect(lambda: sensorDHT.getTemperatureAndHumidity(ui.apiStock))
-    ui.timerTemperatureAndHumidity.start(300000)
+    ui.timerTemperatureAndHumidity.start(600000)
 
 def timerCheckUpdate():
 

@@ -1,10 +1,7 @@
-from logging import captureWarnings
 import pc_logging
 import sensorDHT
 
-from genericpath import exists
 from PyQt5 import QtCore, QtGui, QtWidgets
-from adafruit_platformdetect import board
 from interface import Ui_MainWindow
 from PyQt5.QtCore import QThread, pyqtSignal
 from datetime import datetime
@@ -38,28 +35,31 @@ class ProgressBarWorker(QThread):
     def __init__(ui):
         super(ProgressBarWorker,ui).__init__()
         ui.progress = 103
-        ui.isStop = False
+        ui.isFixCount = False
+        ui.isStart = True
 
     def run(ui):
         while True:
-            if (ui.isStop == True):
-                ui.isStop = False
+            if(ui.isStart == True):
+                ui.isStart = False
+                ui.progress = 0
+
+            if (ui.isFixCount == True):
+                ui.isFixCount = False
                 ui.progress = 103
-                ui.run()
-
-            if (ui.progress == 0):
-                ui.progress = 105
-
-            if (ui.progress == 105):
-                ui.progress = 105
 
             if (ui.progress > 0 and ui.progress < 105):
                 time.sleep(0.08)
                 ui.progress -= 1
                 ui.change_value.emit(ui.progress)
 
-    def stop(ui):
-        ui.isStop = True
+            if (ui.progress == 0 or ui.progress == 105):
+                ui.progress = 105
+                advertising()
+                time.sleep(1)
+
+    def fixCount(ui):
+        ui.isFixCount = True
 
 # Get System Info
 
@@ -200,14 +200,15 @@ def barcodeReset():
 # When barcode textChanged
 
 def sync_lineEdit():
+    ui.progressBar.setValue(105)
     ui.countRel = 0
-    ui.progressBarWorker.stop()
-    ui.progressBarThread.start()
+    ui.progressBarWorker.fixCount()
 
     hideForms()
 
     ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/manualInputBc_dark.png"))
     ui.barcode.setGeometry(QtCore.QRect(40, 245, 800, 70))
+
     ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1017, 20))
 
 # When Press Enter
@@ -226,8 +227,7 @@ def barcodePressedEnter():
 
     ui.countRel = 0
     ui.barcodeCopy = ''
-    ui.progressBarWorker.stop()
-    ui.progressBarThread.start()
+    ui.progressBarWorker.fixCount()
     barcode = ui.barcode.text()
 
     # Mode Config
@@ -391,8 +391,16 @@ def barcodePressedEnter():
 
             emp = 'http://' + ui.apiAddress + '/emp_reg?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&barcode=' + barcode + '&source=' + str(ui.source)
 
-            response = requests.get(emp)
-            pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+            try:
+                response = requests.get(emp, timeout = 0.5)
+                pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+
+            except Exception:
+                changeMpce()
+                emp = 'http://' + ui.apiAddress + '/emp_reg?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&barcode=' + barcode + '&source=' + str(ui.source)
+                response = requests.get(emp)
+                pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+
             response = response.json()
 
             name = response["Name"]
@@ -476,15 +484,27 @@ def getProductInfo(art, km, rel, barcode):
 
         # Get related products
         try:
-            response = requests.get(rel).json()
+            try:
+                response = requests.get(rel, timeout = 0.5)
+                pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+
+            except Exception:
+                changeMpce()
+                art = 'http://' + ui.apiAddress + '/artex?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode + '&source=' + str(ui.source)
+                km ='http://' + ui.apiAddress + '/category?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode + '&source=' + str(ui.source)
+                rel = 'http://' + ui.apiAddress + '/rel?key='+ ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode + '&source=' + str(ui.source)
+                response = requests.get(rel)
+                pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+
+            response = response.json()
+
             if(len(response) > 0):
                 ui.countRel = len(response)
                 ui.rels = response
 
-            getProduct(art,km)
+            getProduct(art,km,barcode)
 
         except Exception:
-
             try:
                 getCard(barcode)
 
@@ -496,11 +516,20 @@ def getProductInfo(art, km, rel, barcode):
 
 # Get info product
 
-def getProduct(art,km):
+def getProduct(art,km,barcode):
     ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1017, 20))
 
-    response = requests.get(art)
-    pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+    try:
+        response = requests.get(art, timeout = 0.5)
+        pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+
+    except Exception:
+        changeMpce()
+        art = 'http://' + ui.apiAddress + '/artex?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode + '&source=' + str(ui.source)
+        km ='http://' + ui.apiAddress + '/category?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode + '&source=' + str(ui.source)
+        response = requests.get(art)
+        pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+
     response = response.json()
 
     barcode = response["Barcode"]
@@ -529,7 +558,7 @@ def getProduct(art,km):
         penny = "00"
 
     try:
-        km = getKM(km)
+        km = getKM(km, barcode)
         if (km != None): strKm = str(km)
     except:
         return
@@ -667,10 +696,18 @@ def formBonus(priceOldStr,pennyOld):
     ui.priceCurrency.setGeometry(QtCore.QRect(370, 225, 200, 150))
 
 # Get KM
-def getKM(km):
+def getKM(km, barcode):
 
-    response = requests.get(km)
-    pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+    try:
+        response = requests.get(km, timeout = 0.5)
+        pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+
+    except Exception:
+        changeMpce()
+        km ='http://' + ui.apiAddress + '/category?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode + '&source=' + str(ui.source)
+        response = requests.get(km)
+        pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+
     response = response.json()
 
     responseKM = response["KM"]
@@ -684,8 +721,15 @@ def getImage(code):
 
     image  = 'http://' + ui.apiAddress + '/img?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + code + '&sticker=1&source=' + str(ui.source)
 
-    responseImage = requests.get(image)
-    pc_logging.writeResponseToLog(responseImage.url,responseImage.elapsed.total_seconds())
+    try:
+        responseImage = requests.get(image, timeout = 0.5)
+        pc_logging.writeResponseToLog(responseImage.url,responseImage.elapsed.total_seconds())
+
+    except Exception:
+        changeMpce()
+        image  = 'http://' + ui.apiAddress + '/img?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + code + '&sticker=1&source=' + str(ui.source)
+        responseImage = requests.get(image)
+        pc_logging.writeResponseToLog(responseImage.url,responseImage.elapsed.total_seconds())
 
     file = open(pathImg + "img/temp/temp_image.jpg", "wb")
     file.write(responseImage.content)
@@ -699,8 +743,16 @@ def getCard(barcode):
 
     card = 'http://' + ui.apiAddress + '/card?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&card=' + barcode + '&source=' + str(ui.source)
 
-    responseCard = requests.get(card)
-    pc_logging.writeResponseToLog(responseCard.url,responseCard.elapsed.total_seconds())
+    try:
+        responseCard = requests.get(card, timeout = 0.5)
+        pc_logging.writeResponseToLog(responseCard.url,responseCard.elapsed.total_seconds())
+
+    except Exception:
+        changeMpce()
+        card = 'http://' + ui.apiAddress + '/card?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&card=' + barcode + '&source=' + str(ui.source)
+        responseCard = requests.get(card)
+        pc_logging.writeResponseToLog(responseCard.url,responseCard.elapsed.total_seconds())
+
     responseCard = responseCard.json()
 
     bonus = responseCard["Bonus"]
@@ -743,8 +795,7 @@ def related():
         ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/companionProdBcDark.png"))
         ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1017, 20))
         ui.barcodeCopy = ''
-        ui.progressBarWorker.stop()
-        ui.progressBarThread.start()
+        ui.progressBarWorker.fixCount()
 
         code = str(ui.rels[ui.countRel-1])
 
@@ -753,8 +804,16 @@ def related():
 
         km = getKM(km)
 
-        response = requests.get(art)
-        pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+        try:
+            response = requests.get(art, timeout = 0.5)
+            pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+
+        except Exception:
+            changeMpce()
+            art = 'http://' + ui.apiAddress + '/art?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + code +'&source=3'
+            response = requests.get(art)
+            pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
+
         response = response.json()
 
         name = response["Name"]
@@ -916,6 +975,16 @@ def checkPing():
 
             pc_logging.writeError("Servers connection error")
 
+def changeMpce():
+
+    if (ui.apiAddress == "mpce03.avrora.lan"):
+        ui.apiAddress = "mpce04.avrora.lan"
+        return
+
+    if (ui.apiAddress == "mpce04.avrora.lan"):
+        ui.apiAddress = "mpce03.avrora.lan"
+        return
+
 def checkInput():
 
     length = len(ui.barcode.text()) - len(ui.barcodeCopy)
@@ -925,46 +994,42 @@ def checkInput():
         ui.isLineEdit = True
         sync_lineEdit()
 
-def checkProgressBar():
-
-    if (ui.progressBar.value() < 1 and ui.countRel < 1 and ui.statusConfig <= 0):
-        advertising()
-    if (ui.progressBar.value() < 1 and ui.countRel > 0):
-        related()
-
 def advertising ():
 
-    if (ui.failConnenct == False and ui.statusEthernet == True ):
+    if (ui.countRel < 1):
 
-        ui.barcode.setText("")
-        hideForms()
+        if (ui.failConnenct == False and ui.statusEthernet == True ):
 
-        try:
-            for root, dirs, files in os.walk(pathImg + "img/advertise"):
-                    for filename in files:
-                        ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/advertise/" + files[ui.countAdvertising]))
+            ui.barcode.setText("")
+            hideForms()
 
-            if( ui.secondAdvertising == 8):
-                ui.secondAdvertising = 0
-                ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/advertise/" + files[ui.countAdvertising]))
-                ui.countAdvertising +=1
+            try:
+                for root, dirs, files in os.walk(pathImg + "img/advertise"):
+                        for filename in files:
+                            ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/advertise/" + files[ui.countAdvertising]))
 
-            if (ui.countAdvertising > len(files)-1 ):
-                ui.countAdvertising = 0
+                if( ui.secondAdvertising == 8):
+                    ui.secondAdvertising = 0
+                    ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/advertise/" + files[ui.countAdvertising]))
+                    ui.countAdvertising +=1
 
-            ui.secondAdvertising += 1
+                if (ui.countAdvertising > len(files)-1 ):
+                    ui.countAdvertising = 0
 
-        except:
-            ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/default_dark.jpg"))
+                ui.secondAdvertising += 1
+
+            except:
+                ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/default_dark.jpg"))
+
+    if (ui.countRel > 0):
+        related()
 
 def backspace():
 
     length = len(ui.barcode.text()) - len(ui.barcodeCopy)
 
-    if (length < 0):
-        ui.progressBarWorker.stop()
-
     if (ui.barcode.text() == "" and ui.statusConfig <= 0):
+        ui.isLineEdit = False
         advertising()
         return
 
@@ -1035,6 +1100,7 @@ def checkUpdate():
         info = f"http://10.13.153.10/api/price/getVersion?version={ui.actualVersion}&ip={ui.ip}&stock={ui.apiStock}&device={ui.apiDevice}&numberBody={ui.apiNumberBody}&images={filenames}&dateTime={time}"
 
         requests.get(info)
+        pc_logging.writeInfo("Check Update")
 
     except:
         print('error actualVersion')
@@ -1044,12 +1110,6 @@ def timerCheckInput():
     ui.timerCheckInput = QtCore.QTimer()
     ui.timerCheckInput.timeout.connect(checkInput)
     ui.timerCheckInput.start(200)
-
-def timerCheckProgressBar():
-
-    ui.timerCheckProgressBar = QtCore.QTimer()
-    ui.timerCheckProgressBar.timeout.connect(checkProgressBar)
-    ui.timerCheckProgressBar.start(1000)
 
 def timerCheckPing():
 
@@ -1091,7 +1151,6 @@ pc_logging.writeInfo('Starting')
 
 getInfo()
 timerCheckInput()
-timerCheckProgressBar()
 timerCheckPing()
 timerTemperatureAndHumidity()
 timerCheckUpdate()
@@ -1105,6 +1164,6 @@ ui.progressBarWorker.moveToThread(ui.progressBarThread)
 ui.progressBarWorker.change_value.connect(ui.progressBar.setValue)
 ui.progressBarThread.started.connect(ui.progressBarWorker.run)
 ui.time = time.time()
-
+ui.progressBarThread.start()
 # Run
 sys.exit(app.exec_())

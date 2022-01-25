@@ -501,6 +501,7 @@ def getProductInfo(art, km, rel, barcode):
             if(len(response) > 0):
                 ui.countRel = len(response)
                 ui.rels = response
+                ui.rels.reverse()
 
             getProduct(art,km,barcode)
 
@@ -802,7 +803,7 @@ def related():
         art = 'http://' + ui.apiAddress + '/art?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + code +'&source=3'
         km ='http://' + ui.apiAddress + '/category?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + code +'&source=3'
 
-        km = getKM(km)
+        km = getKM(km,code)
 
         try:
             response = requests.get(art, timeout = 0.5)
@@ -1097,7 +1098,7 @@ def checkUpdate():
         for filename in imgs:
                 filenames += filename
 
-        info = f"http://10.13.153.10/api/price/getVersion?version={ui.actualVersion}&ip={ui.ip}&stock={ui.apiStock}&device={ui.apiDevice}&numberBody={ui.apiNumberBody}&images={filenames}&dateTime={time}"
+        info = f"http://price-py-service.avrora.lan/api/price/getInfo?version={ui.actualVersion}&ip={ui.ip}&stock={ui.apiStock}&device={ui.apiDevice}&numberBody={ui.apiNumberBody}&images={filenames}&dateTime={time}"
 
         requests.get(info)
         pc_logging.writeInfo("Check Update")

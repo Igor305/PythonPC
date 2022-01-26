@@ -659,8 +659,7 @@ def getProduct(art,km,barcode):
 
     try:
         path = getImage(str(code))
-
-        ui.productImage.setStyleSheet(f"border-radius:15px; border-image: url({path}img/temp/temp_image.jpg) 0 0 0 0 stretch stretch;")
+        ui.productImage.setStyleSheet(f"border-radius:15px; border-image: url({path}img/temp/temp_image) 0 0 0 0 stretch stretch;")
         ui.productImage.setGeometry(QtCore.QRect(530, 25, 470, 545))
 
     except Exception:
@@ -732,7 +731,7 @@ def getImage(code):
         responseImage = requests.get(image)
         pc_logging.writeResponseToLog(responseImage.url,responseImage.elapsed.total_seconds())
 
-    file = open(pathImg + "img/temp/temp_image.jpg", "wb")
+    file = open(pathImg + "img/temp/temp_image", "wb")
     file.write(responseImage.content)
     file.close()
 
@@ -855,7 +854,7 @@ def related():
         try:
             path = getImage(code)
 
-            ui.productImageRel.setStyleSheet(f"border-radius:15px; border-image: url({path}img/temp/temp_image.jpg) 0 0 0 0 stretch stretch;")
+            ui.productImageRel.setStyleSheet(f"border-radius:15px; border-image: url({path}img/temp/temp_image) 0 0 0 0 stretch stretch;")
             ui.productImageRel.setGeometry(QtCore.QRect(29, 29, 470, 375))
 
         except Exception:

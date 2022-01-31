@@ -456,7 +456,7 @@ def barcodePressedEnter():
                 ui.barcode.setText("")
                 ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/Offline_dark_2.jpg"))
 
-        elif (len(barcode) > 12):
+        elif (len(barcode) > 6):
 
             ui.barcode.setText("")
             ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
@@ -468,7 +468,7 @@ def barcodePressedEnter():
 
         # Check Code
 
-        elif(len(barcode) <= 12):
+        elif(len(barcode) <= 6):
 
             ui.barcode.setText("")
             ui.barcode.setGeometry(QtCore.QRect(70, 245, 0, 0))
@@ -1128,7 +1128,7 @@ def timerCheckUpdate():
 
     ui.timerCheckUpdate = QtCore.QTimer()
     ui.timerCheckUpdate.timeout.connect(checkUpdate)
-    ui.timerCheckUpdate.start(120000)
+    ui.timerCheckUpdate.start(1800000)
 
 ui.statusEthernet = True
 ui.statusConfig = 0

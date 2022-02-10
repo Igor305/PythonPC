@@ -1,5 +1,6 @@
 import pc_logging
 import sensorDHT
+import advertisement
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from interface import Ui_MainWindow
@@ -1085,6 +1086,7 @@ def backspace():
 
 def checkUpdate():
     try:
+        listHash = advertisement.getListHash()
         time = datetime.now()
         imgs =[]
         filenames = ""
@@ -1097,13 +1099,13 @@ def checkUpdate():
         for filename in imgs:
                 filenames += filename
 
-        info = f"http://price-py-service.avrora.lan/api/price/getInfo?version={ui.actualVersion}&ip={ui.ip}&stock={ui.apiStock}&device={ui.apiDevice}&numberBody={ui.apiNumberBody}&images={filenames}&dateTime={time}"
-
+        info = f"http://price-py-service.avrora.lan/api/price/getInfo?version={ui.actualVersion}&ip={ui.ip}&stock={ui.apiStock}&device={ui.apiDevice}&numberBody={ui.apiNumberBody}&imagesHash={listHash}&dateTime={time}"
         requests.get(info)
+        print(info)
         pc_logging.writeInfo("Check Update")
 
-    except:
-        print('error actualVersion')
+    except Exception as err:
+        print(err)
 
 def timerCheckInput():
 
@@ -1125,10 +1127,10 @@ def timerTemperatureAndHumidity():
     ui.timerTemperatureAndHumidity.start(600000)
 
 def timerCheckUpdate():
-
+    checkUpdate()
     ui.timerCheckUpdate = QtCore.QTimer()
     ui.timerCheckUpdate.timeout.connect(checkUpdate)
-    ui.timerCheckUpdate.start(1800000)
+    ui.timerCheckUpdate.start(120000)
 
 ui.statusEthernet = True
 ui.statusConfig = 0
@@ -1148,7 +1150,6 @@ ui.actualVersion="1.0.0.0"
 
 pc_logging.createLogs()
 pc_logging.writeInfo('Starting')
-
 getInfo()
 timerCheckInput()
 timerCheckPing()

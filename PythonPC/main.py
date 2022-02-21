@@ -997,13 +997,12 @@ def checkInput():
 
 def advertising ():
 
-    if (ui.countRel < 1):
+    if (ui.statusConfig <= 0 and ui.countRel < 1):
 
         if (ui.failConnenct == False and ui.statusEthernet == True ):
 
             ui.barcode.setText("")
             hideForms()
-
             try:
                 for root, dirs, files in os.walk(pathImg + "img/advertise"):
                         for filename in files:
@@ -1101,7 +1100,6 @@ def checkUpdate():
 
         info = f"http://price-py-service.avrora.lan/api/price/getInfo?version={ui.actualVersion}&ip={ui.ip}&stock={ui.apiStock}&device={ui.apiDevice}&numberBody={ui.apiNumberBody}&imagesHash={listHash}&dateTime={time}"
         requests.get(info)
-        print(info)
         pc_logging.writeInfo("Check Update")
 
     except Exception as err:
@@ -1127,10 +1125,11 @@ def timerTemperatureAndHumidity():
     ui.timerTemperatureAndHumidity.start(600000)
 
 def timerCheckUpdate():
+
     checkUpdate()
     ui.timerCheckUpdate = QtCore.QTimer()
     ui.timerCheckUpdate.timeout.connect(checkUpdate)
-    ui.timerCheckUpdate.start(120000)
+    ui.timerCheckUpdate.start(1800000)
 
 ui.statusEthernet = True
 ui.statusConfig = 0
@@ -1146,7 +1145,7 @@ ui.apiKey="39fa302c1a6b40e19020b376c9becb3b"
 ui.apiStock="235"
 ui.apiDevice="DeviceName"
 ui.apiNumberBody="0000"
-ui.actualVersion="1.0.0.0"
+ui.actualVersion="10.0.0.0"
 
 pc_logging.createLogs()
 pc_logging.writeInfo('Starting')

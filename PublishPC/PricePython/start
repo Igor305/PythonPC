@@ -1,0 +1,19 @@
+#!/bin/bash
+# Start APP
+
+folder=/home/pi/PricePython/main
+newFolder=/home/pi/PricePython/new/main
+newFile=/home/pi/PricePython/new/main/main
+
+if [ -e "$newFile" ]
+then 
+	cd $newFolder
+	sudo ./main &
+	sleep 5
+	cd /home/pi/PricePython/
+	pgrep main | sudo xargs kill && rm -r $folder && cp -ar new/* . && rm -r /home/pi/PricePython/new && sudo ./start || echo "re" #& rm -r $newFolder
+
+else 
+	cd /home/pi/PricePython/main
+	sudo ./main
+fi

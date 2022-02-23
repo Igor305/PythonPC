@@ -5,21 +5,17 @@ pathAdvertise = "/home/pi/PricePython/img/advertise"
 
 def getListHash():
     try:
-        listHash = "|"
+        result = []
         for root, dirs, files in os.walk(pathAdvertise):
                 for filename in files:
+
                     hash =_md5(f"{pathAdvertise}/{filename}")
-                    result = (f"|{filename};{hash}")
-
-                    listHash += result
-
-        if (len(listHash) > 2):
-            listHash = listHash[2:]
+                    result.append(f"{filename};{hash}")
 
     except Exception as err:
         print(err)
 
-    return listHash
+    return result
 
 def _md5(fname):
     hash_md5 = hashlib.md5()

@@ -1,6 +1,7 @@
 import pc_logging
 import sensorDHT
 import advertisement
+import models
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from interface import Ui_MainWindow
@@ -11,6 +12,7 @@ from ping3 import ping
 import requests
 import socket
 import time
+import json
 import sys
 import os
 
@@ -72,7 +74,6 @@ def getInfo():
     if (deviceName != "Avrora"):
         name = deviceName.split('-P')
         stock = name[0]
-        device = name[1]
 
         stock = stock[1:len(stock)]
 
@@ -80,7 +81,7 @@ def getInfo():
             stock = stock[1:len(stock)]
 
         ui.apiStock = stock
-        ui.apiDevice = device
+        ui.apiDevice = deviceName
 
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -916,16 +917,7 @@ def hideForms():
     ui.lineRed.setGeometry(QtCore.QRect(0, 0, 0, 0))
     ui.lineWhite.setGeometry(QtCore.QRect(0, 0, 0, 0))
 
-def checkPing():
-
-    # Confirm API server
-    mpce03 = "mpce03.avrora.lan"
-    mpce04 = "mpce04.avrora.lan"
-
-    pingMpce03 = ping(mpce03)
-    pingMpce04 = ping(mpce04)
-
-    ui.failConnenct = False
+def checkEthernet():
 
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -948,6 +940,17 @@ def checkPing():
             ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/error_server_dark.jpg"))
 
             pc_logging.writeError("Internet connection error")
+
+def checkPing():
+
+    # Confirm API server
+    mpce03 = "mpce03.avrora.lan"
+    mpce04 = "mpce04.avrora.lan"
+
+    pingMpce03 = ping(mpce03)
+    pingMpce04 = ping(mpce04)
+
+    ui.failConnenct = False
 
     if ui.statusEthernet == True:
 
@@ -1085,22 +1088,11 @@ def backspace():
 
 def checkUpdate():
     try:
-        listHash = advertisement.getListHash()
-        time = datetime.now()
-        imgs =[]
-        filenames = ""
+        imageHashs = advertisement.getListHash()
+        infoModel = models.InfoModel(ui.actualVersion,ui.ip,ui.apiStock,ui.apiDevice,ui.apiNumberBody,imageHashs)
+        post = requests.post("http://price-py-service.avrora.lan/api/price/info", json=infoModel.__dict__)
 
-        for root, dirs, files in os.walk(pathImg + "img/advertise"):
-                for filename in files:
-                    imgs.append(filename)
-        imgs.sort()
-
-        for filename in imgs:
-                filenames += filename
-
-        info = f"http://price-py-service.avrora.lan/api/price/getInfo?version={ui.actualVersion}&ip={ui.ip}&stock={ui.apiStock}&device={ui.apiDevice}&numberBody={ui.apiNumberBody}&imagesHash={listHash}&dateTime={time}"
-        requests.get(info)
-        pc_logging.writeInfo("Check Update")
+        pc_logging.writeInfo(f"Check Update {post}")
 
     except Exception as err:
         print(err)
@@ -1110,6 +1102,13 @@ def timerCheckInput():
     ui.timerCheckInput = QtCore.QTimer()
     ui.timerCheckInput.timeout.connect(checkInput)
     ui.timerCheckInput.start(200)
+
+def timerCheckEthernet():
+
+    checkEthernet()
+    ui.timerCheckEthernet = QtCore.QTimer()
+    ui.timerCheckEthernet.timeout.connect(checkEthernet)
+    ui.timerCheckEthernet.start(1000)
 
 def timerCheckPing():
 
@@ -1151,6 +1150,7 @@ pc_logging.createLogs()
 pc_logging.writeInfo('Starting')
 getInfo()
 timerCheckInput()
+timerCheckEthernet()
 timerCheckPing()
 timerTemperatureAndHumidity()
 timerCheckUpdate()

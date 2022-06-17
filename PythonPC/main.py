@@ -2,6 +2,7 @@ import pc_logging
 import sensorDHT
 import advertisement
 import models
+import subprocess
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from interface import Ui_MainWindow
@@ -12,7 +13,6 @@ from ping3 import ping
 import requests
 import socket
 import time
-import json
 import sys
 import os
 
@@ -74,6 +74,7 @@ def getInfo():
     if (deviceName != "Avrora"):
         name = deviceName.split('-P')
         stock = name[0]
+        ui.apiDeviceNumbers = name[1]
 
         stock = stock[1:len(stock)]
 
@@ -116,7 +117,9 @@ def getInfo():
         if "Serial" in s:
             ui.serial.setText("Serial: " + s[10:])
 
-    sensorDHTdata = sensorDHT.getSensorData()
+    sensorDHTdata = (0,0)
+    while sensorDHTdata == (0,0) :
+        sensorDHTdata = sensorDHT.getSensorData()
 
     ui.temperatureOut.setText(f"Температура внеш.: {sensorDHTdata[0]:.1f}")
     ui.humidity.setText(f"Влажность: {sensorDHTdata[1]:.1f}")
@@ -308,13 +311,13 @@ def barcodePressedEnter():
             ui.statusConfig = 0
             actualNumberShop = ""
             if (int(ui.tempNumberShop) < 10):
-                actualNumberShop = "a000" + str(ui.tempNumberShop)
+                actualNumberShop = "A000" + str(ui.tempNumberShop)
             elif (int(ui.tempNumberShop) >= 10 and int(ui.tempNumberShop) < 100):
-                actualNumberShop = "a00" + str(ui.tempNumberShop)
+                actualNumberShop = "A00" + str(ui.tempNumberShop)
             elif (int(ui.tempNumberShop) >= 100 and int(ui.tempNumberShop) < 1000):
-                actualNumberShop = "a0" + str(ui.tempNumberShop)
+                actualNumberShop = "A0" + str(ui.tempNumberShop)
             elif (int(ui.tempNumberShop) >= 1000):
-                actualNumberShop = "a" + str(ui.tempNumberShop)
+                actualNumberShop = "A" + str(ui.tempNumberShop)
 
             ui.actualDeviceName = actualNumberShop + "-P" + ui.tempNumberPC
 
@@ -523,7 +526,7 @@ def getProduct(art,km,barcode):
     ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1017, 20))
 
     try:
-        response = requests.get(art, timeout = 0.5)
+        response = requests.post(art, timeout = 0.5)
         pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
 
     except Exception:
@@ -918,7 +921,6 @@ def hideForms():
     ui.lineWhite.setGeometry(QtCore.QRect(0, 0, 0, 0))
 
 def checkEthernet():
-
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(('8.8.8.8', 80))
@@ -1086,8 +1088,38 @@ def backspace():
         ui.configText.setGeometry(QtCore.QRect(0, 200, 1024, 100))
         return
 
+def checkTemperature():
+    temperatureCPU = open("/sys/class/thermal/thermal_zone0/temp", "r")
+    temperatureCPU = str(round(float(temperatureCPU.read())/1000))
+
+    sensorDHT.getTemperatureAndHumidity(ui.apiStock,ui.apiDeviceNumbers)
+    sensorDHT.getTemperatureCPU(ui.apiStock, ui.apiDeviceNumbers,temperatureCPU)
+
+def requestInfoPC():
+
+    try:
+        netbiosname1 = socket.gethostname()
+        version1 = str(subprocess.check_output('sudo uname -r', shell=True,  universal_newlines=True)).rstrip()
+        version1 = version1.replace('+','[+]')
+        uptimehrs = str(subprocess.check_output('cat /proc/uptime', shell=True,  universal_newlines=True)).rstrip()
+        uptimehrs = str(round(float((uptimehrs.split(' ')[0]))))
+        serialno1 = str(subprocess.check_output('sudo cat /proc/cpuinfo | grep Serial | cut -d " " -f 2', shell=True,  universal_newlines=True)).rstrip()
+        temperatureCPU = open("/sys/class/thermal/thermal_zone0/temp", "r")
+        tempcpu = str(float(temperatureCPU.read())/1000)
+        memory =  str(subprocess.check_output("free | awk NR==2'{print $7}'", shell=True,  universal_newlines=True)).rstrip()
+
+        deviceInfo = f'http://{ui.apiAddress}/device_info?key={ui.apiKey}&stock={ui.apiStock}&device={ui.apiDevice}&netbiosname1={netbiosname1}&version1={version1}&version2={ui.actualVersion}&uptimehrs={uptimehrs}&serialno1={serialno1}&serialno2={ui.apiNumberBody}&tempcpu={tempcpu}&memory={memory}'
+        print(deviceInfo)
+        response = requests.get(deviceInfo, timeout = 1)
+        print(response)
+        print(response.json())
+
+    except Exception as err:
+        print(err)
+
 def checkUpdate():
     try:
+        requestInfoPC()
         imageHashs = advertisement.getListHash()
         infoModel = models.InfoModel(ui.actualVersion,ui.ip,ui.apiStock,ui.apiDevice,ui.apiNumberBody,imageHashs)
         post = requests.post("http://price-py-service.avrora.lan/api/price/info", json=infoModel.__dict__)
@@ -1105,7 +1137,6 @@ def timerCheckInput():
 
 def timerCheckEthernet():
 
-    checkEthernet()
     ui.timerCheckEthernet = QtCore.QTimer()
     ui.timerCheckEthernet.timeout.connect(checkEthernet)
     ui.timerCheckEthernet.start(1000)
@@ -1118,9 +1149,9 @@ def timerCheckPing():
     ui.timerCheckPing.start(60000)
 
 def timerTemperatureAndHumidity():
-
+    checkTemperature()
     ui.timerTemperatureAndHumidity = QtCore.QTimer()
-    ui.timerTemperatureAndHumidity.timeout.connect(lambda: sensorDHT.getTemperatureAndHumidity(ui.apiStock))
+    ui.timerTemperatureAndHumidity.timeout.connect(checkTemperature)
     ui.timerTemperatureAndHumidity.start(600000)
 
 def timerCheckUpdate():
@@ -1144,10 +1175,12 @@ ui.apiKey="39fa302c1a6b40e19020b376c9becb3b"
 ui.apiStock="235"
 ui.apiDevice="DeviceName"
 ui.apiNumberBody="0000"
-ui.actualVersion="10.0.0.0"
+ui.actualVersion="10.0.0.1"
+
+ui.apiDeviceNumbers = ""
 
 pc_logging.createLogs()
-pc_logging.writeInfo('Starting')
+#pc_logging.writeInfo('Starting')
 getInfo()
 timerCheckInput()
 timerCheckEthernet()

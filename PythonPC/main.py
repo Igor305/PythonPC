@@ -400,7 +400,7 @@ def barcodePressedEnter():
                 response = requests.get(emp, timeout = 0.5)
                 pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
 
-            except Exception:
+            except Exception as err:           
                 changeMpce()
                 emp = 'http://' + ui.apiAddress + '/emp_reg?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&barcode=' + barcode + '&source=' + str(ui.source)
                 response = requests.get(emp)
@@ -430,7 +430,7 @@ def barcodePressedEnter():
             ##ui.statusEmp.setGeometry(QtCore.QRect(0, 310, 1024, 200))
             ui.timeEmp.setGeometry(QtCore.QRect(0, 380, 1024, 200))
 
-        except Exception:
+        except Exception as err:
 
             ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1017, 20))
             ui.barcodeText.setGeometry(QtCore.QRect(40, 550, 0, 0))
@@ -444,7 +444,6 @@ def barcodePressedEnter():
             ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/merchandiserError.png"))
 
     else:
-
         # Check Barcode
 
         if ui.statusEthernet == False or ui.failConnenct == True:
@@ -490,10 +489,10 @@ def getProductInfo(art, km, rel, barcode):
         # Get related products
         try:
             try:
-                response = requests.get(rel, timeout = 0.5)
+                response = requests.get(rel, timeout = 0.5)                
                 pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
 
-            except Exception:
+            except Exception as err:
                 changeMpce()
                 art = 'http://' + ui.apiAddress + '/artex?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode + '&source=' + str(ui.source)
                 km ='http://' + ui.apiAddress + '/category?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode + '&source=' + str(ui.source)
@@ -510,11 +509,11 @@ def getProductInfo(art, km, rel, barcode):
 
             getProduct(art,km,barcode)
 
-        except Exception:
+        except Exception as err:
             try:
                 getCard(barcode)
 
-            except Exception:
+            except Exception as err:
 
                 hideForms()
                 ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/merchandiserError.png"))
@@ -526,10 +525,10 @@ def getProduct(art,km,barcode):
     ui.progressBar.setGeometry(QtCore.QRect(3, 575, 1017, 20))
 
     try:
-        response = requests.post(art, timeout = 0.5)
+        response = requests.get(art, timeout = 0.5)
         pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
 
-    except Exception:
+    except Exception as err:
         changeMpce()
         art = 'http://' + ui.apiAddress + '/artex?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode + '&source=' + str(ui.source)
         km ='http://' + ui.apiAddress + '/category?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode + '&source=' + str(ui.source)
@@ -566,7 +565,7 @@ def getProduct(art,km,barcode):
     try:
         km = getKM(km, barcode)
         if (km != None): strKm = str(km)
-    except:
+    except Exception as err:
         return
 
     ui.barcodeText.setText("Ш/К:")
@@ -667,7 +666,7 @@ def getProduct(art,km,barcode):
         ui.productImage.setStyleSheet(f"border-radius:15px; border-image: url({path}img/temp/temp_image) 0 0 0 0 stretch stretch;")
         ui.productImage.setGeometry(QtCore.QRect(530, 25, 470, 545))
 
-    except Exception:
+    except Exception as err:
         ui.productImage.setPixmap(QtGui.QPixmap(pathImg + "img/resources/noImage.jpg"))
 
 def formBonus(priceOldStr,pennyOld):
@@ -707,7 +706,7 @@ def getKM(km, barcode):
         response = requests.get(km, timeout = 0.5)
         pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
 
-    except Exception:
+    except Exception as err:
         changeMpce()
         km ='http://' + ui.apiAddress + '/category?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + barcode + '&source=' + str(ui.source)
         response = requests.get(km)
@@ -730,7 +729,7 @@ def getImage(code):
         responseImage = requests.get(image, timeout = 0.5)
         pc_logging.writeResponseToLog(responseImage.url,responseImage.elapsed.total_seconds())
 
-    except Exception:
+    except Exception as err:
         changeMpce()
         image  = 'http://' + ui.apiAddress + '/img?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + code + '&sticker=1&source=' + str(ui.source)
         responseImage = requests.get(image)
@@ -752,7 +751,7 @@ def getCard(barcode):
         responseCard = requests.get(card, timeout = 0.5)
         pc_logging.writeResponseToLog(responseCard.url,responseCard.elapsed.total_seconds())
 
-    except Exception:
+    except Exception as err:
         changeMpce()
         card = 'http://' + ui.apiAddress + '/card?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&card=' + barcode + '&source=' + str(ui.source)
         responseCard = requests.get(card)
@@ -813,7 +812,7 @@ def related():
             response = requests.get(art, timeout = 0.5)
             pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
 
-        except Exception:
+        except Exception as err:
             changeMpce()
             art = 'http://' + ui.apiAddress + '/art?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + code +'&source=3'
             response = requests.get(art)
@@ -862,12 +861,12 @@ def related():
             ui.productImageRel.setStyleSheet(f"border-radius:15px; border-image: url({path}img/temp/temp_image) 0 0 0 0 stretch stretch;")
             ui.productImageRel.setGeometry(QtCore.QRect(29, 29, 470, 375))
 
-        except Exception:
+        except Exception as err:
             ui.productImage.setPixmap(QtGui.QPixmap(pathImg + "img/resources/noImage.jpg"))
 
         ui.countRel -= 1
 
-    except Exception:
+    except Exception as err:
         ui.countRel = 0
 
 # Hide all
@@ -1099,20 +1098,26 @@ def requestInfoPC():
 
     try:
         netbiosname1 = socket.gethostname()
-        version1 = str(subprocess.check_output('sudo uname -r', shell=True,  universal_newlines=True)).rstrip()
-        version1 = version1.replace('+','[+]')
+
+        numberOS = open("/etc/os-release","r")
+        for s in numberOS:
+            if "VERSION_ID=" in s:
+                version1 = s[12:-2]
+        
         uptimehrs = str(subprocess.check_output('cat /proc/uptime', shell=True,  universal_newlines=True)).rstrip()
         uptimehrs = str(round(float((uptimehrs.split(' ')[0]))))
+
         serialno1 = str(subprocess.check_output('sudo cat /proc/cpuinfo | grep Serial | cut -d " " -f 2', shell=True,  universal_newlines=True)).rstrip()
+
         temperatureCPU = open("/sys/class/thermal/thermal_zone0/temp", "r")
         tempcpu = str(float(temperatureCPU.read())/1000)
-        memory =  str(subprocess.check_output("free | awk NR==2'{print $7}'", shell=True,  universal_newlines=True)).rstrip()
+
+        mem =  str(subprocess.check_output("free | awk NR==2'{print $7}'", shell=True,  universal_newlines=True)).rstrip()
+        memory = str(round(float(mem)/1000))
 
         deviceInfo = f'http://{ui.apiAddress}/device_info?key={ui.apiKey}&stock={ui.apiStock}&device={ui.apiDevice}&netbiosname1={netbiosname1}&version1={version1}&version2={ui.actualVersion}&uptimehrs={uptimehrs}&serialno1={serialno1}&serialno2={ui.apiNumberBody}&tempcpu={tempcpu}&memory={memory}'
-        print(deviceInfo)
-        response = requests.get(deviceInfo, timeout = 1)
-        print(response)
-        print(response.json())
+
+        requests.get(deviceInfo, timeout = 1)
 
     except Exception as err:
         print(err)
@@ -1180,7 +1185,7 @@ ui.actualVersion="10.0.0.1"
 ui.apiDeviceNumbers = ""
 
 pc_logging.createLogs()
-#pc_logging.writeInfo('Starting')
+pc_logging.writeInfo('Starting')
 getInfo()
 timerCheckInput()
 timerCheckEthernet()

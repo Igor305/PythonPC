@@ -400,7 +400,7 @@ def barcodePressedEnter():
                 response = requests.get(emp, timeout = 0.5)
                 pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
 
-            except Exception as err:           
+            except Exception as err:
                 changeMpce()
                 emp = 'http://' + ui.apiAddress + '/emp_reg?key='+ ui.apiKey +'&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&barcode=' + barcode + '&source=' + str(ui.source)
                 response = requests.get(emp)
@@ -489,7 +489,7 @@ def getProductInfo(art, km, rel, barcode):
         # Get related products
         try:
             try:
-                response = requests.get(rel, timeout = 0.5)                
+                response = requests.get(rel, timeout = 0.5)
                 pc_logging.writeResponseToLog(response.url,response.elapsed.total_seconds())
 
             except Exception as err:
@@ -804,9 +804,6 @@ def related():
         code = str(ui.rels[ui.countRel-1])
 
         art = 'http://' + ui.apiAddress + '/art?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + code +'&source=3'
-        km ='http://' + ui.apiAddress + '/category?key=' + ui.apiKey + '&stock='+ ui.apiStock + '&device=' + ui.apiDevice + '&code=' + code +'&source=3'
-
-        km = getKM(km,code)
 
         try:
             response = requests.get(art, timeout = 0.5)
@@ -1009,20 +1006,24 @@ def advertising ():
             hideForms()
             try:
                 for root, dirs, files in os.walk(pathImg + "img/advertise"):
-                        for filename in files:
-                            ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/advertise/" + files[ui.countAdvertising]))
+                    for filename in files:
+                        if (ui.countAdvertising > len(files)-1 ):
+                            ui.countAdvertising = 0
+
+                        ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/advertise/" + files[ui.countAdvertising]))
 
                 if( ui.secondAdvertising == 8):
                     ui.secondAdvertising = 0
                     ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/advertise/" + files[ui.countAdvertising]))
                     ui.countAdvertising +=1
 
-                if (ui.countAdvertising > len(files)-1 ):
-                    ui.countAdvertising = 0
+
 
                 ui.secondAdvertising += 1
 
-            except:
+            except Exception as err:
+                print(err)
+
                 ui.image.setPixmap(QtGui.QPixmap(pathImg + "img/resources/default_dark.jpg"))
 
     if (ui.countRel > 0):
@@ -1103,7 +1104,7 @@ def requestInfoPC():
         for s in numberOS:
             if "VERSION_ID=" in s:
                 version1 = s[12:-2]
-        
+
         uptimehrs = str(subprocess.check_output('cat /proc/uptime', shell=True,  universal_newlines=True)).rstrip()
         uptimehrs = str(round(float((uptimehrs.split(' ')[0]))))
 
@@ -1124,8 +1125,9 @@ def requestInfoPC():
 
 def checkUpdate():
     try:
-        requestInfoPC()
+        #requestInfoPC()
         imageHashs = advertisement.getListHash()
+        print(imageHashs)
         infoModel = models.InfoModel(ui.actualVersion,ui.ip,ui.apiStock,ui.apiDevice,ui.apiNumberBody,imageHashs)
         post = requests.post("http://price-py-service.avrora.lan/api/price/info", json=infoModel.__dict__)
 
@@ -1164,7 +1166,7 @@ def timerCheckUpdate():
     checkUpdate()
     ui.timerCheckUpdate = QtCore.QTimer()
     ui.timerCheckUpdate.timeout.connect(checkUpdate)
-    ui.timerCheckUpdate.start(1800000)
+    ui.timerCheckUpdate.start(120000)
 
 ui.statusEthernet = True
 ui.statusConfig = 0

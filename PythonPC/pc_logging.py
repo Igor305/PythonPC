@@ -23,7 +23,7 @@ def _removeOldDate():
     today = datetime.today()
     os.chdir(pathLog)
 
-    for root,directories,files in os.walk(pathLog,topdown=False):
+    for root,directories,files in os.walk(pathLog):
         for name in files:
             t = os.stat(os.path.join(root, name))[8]
             filetime = datetime.fromtimestamp(t) - today

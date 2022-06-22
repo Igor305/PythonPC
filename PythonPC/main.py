@@ -1125,7 +1125,7 @@ def requestInfoPC():
 
 def checkUpdate():
     try:
-        #requestInfoPC()
+        requestInfoPC()
         imageHashs = advertisement.getListHash()
         print(imageHashs)
         infoModel = models.InfoModel(ui.actualVersion,ui.ip,ui.apiStock,ui.apiDevice,ui.apiNumberBody,imageHashs)
@@ -1166,7 +1166,7 @@ def timerCheckUpdate():
     checkUpdate()
     ui.timerCheckUpdate = QtCore.QTimer()
     ui.timerCheckUpdate.timeout.connect(checkUpdate)
-    ui.timerCheckUpdate.start(120000)
+    ui.timerCheckUpdate.start(1800000)
 
 ui.statusEthernet = True
 ui.statusConfig = 0
